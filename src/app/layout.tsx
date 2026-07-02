@@ -3,30 +3,6 @@ import "./globals.css";
 import { ToastProvider } from "@/components/ToastProvider";
 import { ThemeProvider } from "@/components/ThemeProvider";
 
-/**
- * Inline script injected into <head> to apply the saved/system theme
- * BEFORE the first paint. This prevents a flash of the wrong theme (FOUC).
- *
- * It mirrors the resolution logic in ThemeProvider.getInitialTheme():
- *   1. localStorage "theme" value ("light" | "dark")
- *   2. system preference via matchMedia
- *   3. default "light"
- */
-const themeInitScript = `
-(function() {
-  try {
-    var stored = localStorage.getItem('theme');
-    var theme = stored;
-    if (theme !== 'light' && theme !== 'dark') {
-      theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-    }
-    if (theme === 'dark') {
-      document.documentElement.classList.add('dark');
-    }
-  } catch (e) {}
-})();
-`;
-
 export const metadata: Metadata = {
   title: "会议废话检测器 - AI 会议效率分析工具",
   description:
@@ -63,7 +39,11 @@ export default function RootLayout({
   return (
     <html lang="zh-CN" className="antialiased" suppressHydrationWarning>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{var t=localStorage.getItem('theme');if(t!=='light'&&t!=='dark'){t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'}if(t==='dark'){document.documentElement.classList.add('dark')}}catch(e){}`,
+          }}
+        />
       </head>
       <body className="min-h-screen flex flex-col">
         <ThemeProvider>

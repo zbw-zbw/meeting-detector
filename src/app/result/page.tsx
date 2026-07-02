@@ -206,7 +206,7 @@ export default function ResultPage() {
       `效率评分：${result.score}分（${result.levelLabel}）`,
     );
     lines.push(
-      `有效信息：${result.breakdown.effective}% | 重复内容：${result.breakdown.repetitive}% | 废话占比：${result.breakdown.nonsense}%`,
+      `有效信息：${result.breakdown?.effective ?? 0}% | 重复内容：${result.breakdown?.repetitive ?? 0}% | 废话占比：${result.breakdown?.nonsense ?? 0}%`,
     );
     lines.push("━━━━━━━━━━━━━━━━━━");
     lines.push("行动项：");
@@ -230,7 +230,7 @@ export default function ResultPage() {
   /* share report */
   const handleShare = useCallback(() => {
     if (!result) return;
-    const shareText = `[会议效率报告] - ${result.meetingTitle}\n效率评分：${result.score}分（${result.levelLabel}）\n有效信息：${result.breakdown.effective}% | 重复：${result.breakdown.repetitive}% | 废话：${result.breakdown.nonsense}%`;
+    const shareText = `[会议效率报告] - ${result.meetingTitle}\n效率评分：${result.score}分（${result.levelLabel}）\n有效信息：${result.breakdown?.effective ?? 0}% | 重复：${result.breakdown?.repetitive ?? 0}% | 废话：${result.breakdown?.nonsense ?? 0}%`;
 
     if (navigator.share) {
       navigator.share({
@@ -265,12 +265,13 @@ export default function ResultPage() {
     window.print();
   }, []);
 
-  /* donut chart math */
+  /* donut chart math — safe defaults if breakdown is missing */
   const RADIUS = 80;
   const CIRCUMFERENCE = 2 * Math.PI * RADIUS; // ~502.65
-  const effectiveLen = result ? CIRCUMFERENCE * (result.breakdown.effective / 100) : 0;
-  const repetitiveLen = result ? CIRCUMFERENCE * (result.breakdown.repetitive / 100) : 0;
-  const nonsenseLen = result ? CIRCUMFERENCE * (result.breakdown.nonsense / 100) : 0;
+  const bd = result?.breakdown ?? { effective: 0, repetitive: 0, nonsense: 0 };
+  const effectiveLen = CIRCUMFERENCE * (bd.effective / 100);
+  const repetitiveLen = CIRCUMFERENCE * (bd.repetitive / 100);
+  const nonsenseLen = CIRCUMFERENCE * (bd.nonsense / 100);
 
   /* ─── loading state ─── */
   if (loading) {
@@ -528,14 +529,14 @@ export default function ResultPage() {
                       <span className="text-sm font-medium text-text">有效信息</span>
                     </div>
                     <span className="text-sm font-semibold text-effective">
-                      {result.breakdown.effective}%
+                      {bd.effective}%
                     </span>
                   </div>
                   <div className="h-2.5 rounded-full bg-border-light overflow-hidden">
                     <div
                       className="h-full rounded-full bg-effective transition-all duration-1000 ease-out"
                       style={{
-                        width: mounted ? `${result.breakdown.effective}%` : "0%",
+                        width: mounted ? `${bd.effective}%` : "0%",
                       }}
                     />
                   </div>
@@ -552,14 +553,14 @@ export default function ResultPage() {
                       <span className="text-sm font-medium text-text">重复内容</span>
                     </div>
                     <span className="text-sm font-semibold text-repetitive">
-                      {result.breakdown.repetitive}%
+                      {bd.repetitive}%
                     </span>
                   </div>
                   <div className="h-2.5 rounded-full bg-border-light overflow-hidden">
                     <div
                       className="h-full rounded-full bg-repetitive transition-all duration-1000 ease-out"
                       style={{
-                        width: mounted ? `${result.breakdown.repetitive}%` : "0%",
+                        width: mounted ? `${bd.repetitive}%` : "0%",
                       }}
                     />
                   </div>
@@ -576,14 +577,14 @@ export default function ResultPage() {
                       <span className="text-sm font-medium text-text">废话/跑题</span>
                     </div>
                     <span className="text-sm font-semibold text-nonsense">
-                      {result.breakdown.nonsense}%
+                      {bd.nonsense}%
                     </span>
                   </div>
                   <div className="h-2.5 rounded-full bg-border-light overflow-hidden">
                     <div
                       className="h-full rounded-full bg-nonsense transition-all duration-1000 ease-out"
                       style={{
-                        width: mounted ? `${result.breakdown.nonsense}%` : "0%",
+                        width: mounted ? `${bd.nonsense}%` : "0%",
                       }}
                     />
                   </div>
