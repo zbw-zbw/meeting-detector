@@ -1,0 +1,449 @@
+"use client";
+
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
+import { useFadeUp } from "@/hooks/useFadeUp";
+import { useState, useRef, useCallback, useEffect } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useToast } from "@/components/ToastProvider";
+import { saveToHistory } from "@/lib/history";
+
+const EXAMPLES: Record<string, string> = {
+  planning: `会议主题：Q3产品规划讨论会
+时间：2024年7月15日 14:00-15:32
+参会人：张总、李经理、王设计、赵开发、小陈、小刘
+
+张总：好，大家都到齐了吧？那我们开始吧。今天主要是讨论一下Q3的产品规划，嗯，这个事情其实之前也提过几次了，但是一直没有一个明确的结论。我觉得吧，我们还是要好好讨论讨论。
+
+李经理：对对对，张总说得对，这个事情确实需要好好讨论一下。我之前也在想这个问题，就是说，怎么讲呢，Q3的方向到底是什么？其实我觉得吧，还是要从用户需求出发。
+
+王设计：我插一句啊，其实用户调研的数据我们上周已经出了，核心发现是：60%的用户希望增加数据导出功能，45%的用户觉得现在的界面太复杂。
+
+张总：嗯嗯，对对对，数据导出这个事情，我记得去年Q4就有人提过，是不是？
+
+赵开发：是的张总，去年Q4确实讨论过，当时因为排期紧没做。从技术角度看，数据导出功能大概需要2周开发时间。
+
+小陈：我补充一下，竞品分析显示，市面上80%的同类产品都支持数据导出，这确实是我们的短板。我建议Q3把这个作为P0优先级。
+
+李经理：嗯，小陈说的有道理。不过话说回来，我们还得考虑其他方面，就是说，不能只看这一个功能。我觉得界面简化也很重要，大家觉得呢？其实这个事情吧，就是那个意思，大家懂的。
+
+张总：好好好，那这样，数据导出和界面简化都做，优先做数据导出。还有其他的吗？
+
+小刘：我提一下，上个月客户反馈最多的bug是登录偶尔失败的问题，这个需要Q3修复。
+
+赵开发：这个bug我查过了，是token刷新的逻辑问题，修复大概需要3天。我建议7月底之前修掉。
+
+张总：行行行，那就这样定了。还有别的事情吗？没有的话就散会吧。嗯，大家辛苦了，好好干。
+
+李经理：好的张总，那我回去整理一下会议纪要。大家加油！`,
+
+  weekly: `会议主题：产品团队周会
+时间：2024年7月18日 10:00-10:45
+参会人：王总监、前端组-小李、后端组-老张、测试组-小赵、产品-小林
+
+王总监：开始吧，按顺序汇报各组本周进展和下周计划。前端先来。
+
+小李：好的。本周完成了用户中心页面重构，已提测。遇到一个问题：设计稿中的动效在低端机上卡顿，和王设计沟通后简化了动画方案。下周计划：完成订单列表页开发。
+
+老张：后端这边，本周完成了支付接口的联调，和第三方支付平台的对接测试通过。另外，数据库慢查询优化也做完了，首页加载速度从3.2秒降到了1.1秒。下周计划：完成数据导出API开发。
+
+小赵：测试组本周完成了V2.3版本的全量回归测试，发现3个P2级别bug，已提给开发。用户中心的测试预计下周三完成。
+
+小林：产品侧，本周完成了Q3需求文档的评审，和运营确认了7月底的营销活动方案。有一个需求变更需要同步：数据导出功能需要增加"按时间范围筛选"的能力，@老张 评估下工期影响。
+
+老张：收到，我评估后今天下班前回复。
+
+王总监：很好。总结一下本周各组都按计划推进，没有阻塞问题。注意事项：7月底是V2.3版本的发布节点，请各组确保本周内不要引入新需求。散会。`,
+
+  brainstorm: `会议主题：新功能头脑风暴
+时间：2024年7月20日 15:00-16:15
+参会人：产品经理-小王、设计师-阿花、前端-大刘、后端-老李、运营-小美
+
+小王：今天的目的是脑暴一下接下来可以做的创新功能。大家随便说，不设限制。
+
+阿花：我先来！我觉得我们可以做一个AI助手功能，就是那种，用户可以跟AI对话，然后AI帮他完成操作。现在这个很火的，各家都在做。
+
+大刘：AI助手确实可以做，但是工程量很大。我之前调研过，光是对话界面就需要至少两周。不过话说回来，如果只做一个简单版本的话，也许可以先上一个FAQ机器人？
+
+老李：说到AI，其实我们的推荐算法也可以优化。目前推荐的点击率才3%，行业平均是8%。不过这个跟AI助手是两码事。
+
+小美：从运营角度，我觉得社区功能更重要。用户留存率一直上不去，如果有社区让用户互相交流，DAU肯定能涨。上次我看竞品做了社区，效果特别好。
+
+小王：嗯嗯，这些想法都不错。其实吧，我之前也想过很多方案，就是一直没确定下来。AI助手、推荐优化、社区，都是好方向。
+
+阿花：对了我还想到一个，暗黑模式！用户反馈里提了很多次了。
+
+大刘：暗黑模式技术上倒是不难，一周就能搞定。
+
+老李：那我们到底先做哪个？感觉什么都想做，但资源有限啊。
+
+小王：要不这样，AI助手和社区都先做个简单的调研报告，下周再定优先级？
+
+小美：那推荐优化呢？这个ROI应该最高吧？
+
+小王：推荐优化也做调研。行，那就这样，@阿花 下周出AI助手的竞品分析，@小美 出社区功能的用户调研，@老李 出推荐优化的技术评估。下周三再开一次会定优先级。散了吧。
+
+大刘：等等，暗黑模式呢？
+
+小王：暗黑模式先放着，不着急。`,
+};
+
+const exampleLabels: { key: string; label: string; emoji: string }[] = [
+  { key: "planning", label: "Q3产品规划会", emoji: "📋" },
+  { key: "weekly", label: "周会同步", emoji: "📅" },
+  { key: "brainstorm", label: "头脑风暴会", emoji: "💡" },
+];
+
+// 加载步骤
+const LOADING_STEPS = [
+  { label: "文本预处理", delay: 2000 },
+  { label: "内容分类分析", delay: 5000 },
+  { label: "生成分析报告", delay: Infinity },
+];
+
+export default function AnalyzePage() {
+  const [text, setText] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [completedStep, setCompletedStep] = useState(-1);
+  const [isDragging, setIsDragging] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const router = useRouter();
+  const { showToast } = useToast();
+
+  useFadeUp();
+
+  const fillExample = useCallback((key: string) => {
+    if (loading) return;
+    setText(EXAMPLES[key]);
+    textareaRef.current?.focus();
+  }, [loading]);
+
+  const charCount = text.length;
+  const canAnalyze = text.trim().length >= 10 && !loading;
+
+  // 加载步骤动画
+  useEffect(() => {
+    if (!loading) {
+      setCompletedStep(-1);
+      return;
+    }
+    setCompletedStep(-1);
+
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    LOADING_STEPS.forEach((step, i) => {
+      if (step.delay < Infinity) {
+        timers.push(
+          setTimeout(() => setCompletedStep(i), step.delay)
+        );
+      }
+    });
+
+    return () => timers.forEach(clearTimeout);
+  }, [loading]);
+
+  useEffect(() => {
+    if (error) showToast(error, "error");
+  }, [error, showToast]);
+
+  const handleAnalyze = async () => {
+    if (!canAnalyze) return;
+    setError(null);
+    setLoading(true);
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 60000);
+
+    try {
+      const res = await fetch("/api/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: text.trim() }),
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error || "分析失败，请重试");
+        setLoading(false);
+        return;
+      }
+
+      setCompletedStep(2);
+
+      // Save to localStorage
+      try {
+        localStorage.setItem("lastAnalysis", JSON.stringify(data));
+      } catch {
+        // ignore storage errors
+      }
+
+      // Save to history
+      const saved = saveToHistory(data);
+      if (!saved) {
+        showToast("隐私模式下不支持保存历史记录", "info");
+      }
+
+      setTimeout(() => {
+        router.push("/result");
+      }, 800);
+    } catch (err) {
+      clearTimeout(timeoutId);
+      if (err instanceof DOMException && err.name === "AbortError") {
+        setError("分析超时，请缩短文本后重试");
+      } else {
+        setError("网络错误，请检查网络后重试");
+      }
+      setLoading(false);
+    }
+  };
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!loading && !isDragging) setIsDragging(true);
+  }, [loading, isDragging]);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    if (loading) return;
+
+    const files = e.dataTransfer.files;
+    if (files && files.length > 0) {
+      const file = files[0];
+      if (file.name.endsWith(".txt") || file.type === "text/plain") {
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          const content = ev.target?.result as string;
+          if (content) {
+            setText(content);
+            showToast("文件内容已加载", "success");
+          }
+        };
+        reader.readAsText(file);
+      } else {
+        showToast("仅支持 .txt 文本文件", "error");
+      }
+    }
+  }, [loading, showToast]);
+
+  return (
+    <>
+      <Navbar />
+      <main className="pt-24 pb-20">
+        <div className="max-w-[800px] mx-auto px-4 sm:px-6">
+          {/* Breadcrumb */}
+          <nav className="flex items-center gap-2 text-sm text-text-muted mb-6 fade-up">
+            <Link href="/" className="hover:text-primary transition-colors">
+              首页
+            </Link>
+            <span>/</span>
+            <span className="text-text-secondary">会议分析</span>
+          </nav>
+
+          {/* Title */}
+          <div className="mb-8 fade-up">
+            <h1 className="text-3xl sm:text-4xl font-extrabold text-text">
+              粘贴你的会议内容
+            </h1>
+            <p className="text-text-secondary mt-3 text-lg">
+              支持会议纪要、文字记录、聊天记录等任意格式
+            </p>
+          </div>
+
+          {/* Textarea + Loading Overlay */}
+          <div
+            className="relative fade-up"
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+          >
+            <textarea
+              ref={textareaRef}
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              disabled={loading}
+              placeholder={`在这里粘贴会议纪要或文字记录...\n\n支持任意格式，建议包含发言人标注以获得更准确的分析。`}
+              className="w-full min-h-[300px] sm:min-h-[400px] bg-surface rounded-2xl border border-border p-5 sm:p-6 text-text text-base leading-relaxed resize-y placeholder:text-text-muted focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none disabled:opacity-60 disabled:cursor-not-allowed"
+            />
+            {isDragging && (
+              <div className="absolute inset-0 bg-primary/10 backdrop-blur-sm rounded-2xl border-2 border-dashed border-primary flex items-center justify-center z-20 pointer-events-none">
+                <div className="text-center">
+                  <p className="text-2xl mb-2">📄</p>
+                  <p className="text-primary font-semibold">拖拽 .txt 文件到此处</p>
+                  <p className="text-primary/60 text-sm mt-1">释放鼠标即可加载文件内容</p>
+                </div>
+              </div>
+            )}
+            <div className="absolute bottom-4 right-4 text-sm text-text-muted pointer-events-none">
+              {charCount} 字
+            </div>
+
+            {/* Loading Overlay */}
+            {loading && (
+              <div className="absolute inset-0 bg-surface/80 backdrop-blur-sm rounded-2xl flex flex-col items-center justify-center gap-6 z-10">
+                {/* Spinning ring */}
+                <div className="relative w-16 h-16">
+                  <svg
+                    className="w-16 h-16 animate-spin"
+                    viewBox="0 0 64 64"
+                    fill="none"
+                  >
+                    <circle
+                      cx="32"
+                      cy="32"
+                      r="28"
+                      stroke="var(--border-light)"
+                      strokeWidth="4"
+                    />
+                    <circle
+                      cx="32"
+                      cy="32"
+                      r="28"
+                      stroke="var(--primary)"
+                      strokeWidth="4"
+                      strokeLinecap="round"
+                      strokeDasharray="120 56"
+                    />
+                  </svg>
+                </div>
+
+                <p className="text-text font-semibold">
+                  AI 正在逐句分析会议内容...
+                </p>
+
+                {/* Progress Steps */}
+                <div className="flex flex-col gap-2">
+                  {LOADING_STEPS.map((step, i) => {
+                    const done = completedStep >= i;
+                    const active = completedStep === i - 1 && i > 0;
+                    return (
+                      <div
+                        key={step.label}
+                        className={`flex items-center gap-2 text-sm transition-all duration-500 ${
+                          done
+                            ? "text-primary"
+                            : active
+                              ? "text-text-secondary animate-pulse"
+                              : "text-text-muted"
+                        }`}
+                      >
+                        <span className="w-5 h-5 flex items-center justify-center rounded-full bg-border-light shrink-0">
+                          {done ? (
+                            <svg
+                              width="12"
+                              height="12"
+                              viewBox="0 0 12 12"
+                              fill="none"
+                            >
+                              <path
+                                d="M2 6l3 3 5-5"
+                                stroke="var(--primary)"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              />
+                            </svg>
+                          ) : active ? (
+                            <span className="w-2 h-2 rounded-full bg-primary" />
+                          ) : (
+                            <span className="w-1.5 h-1.5 rounded-full bg-text-muted" />
+                          )}
+                        </span>
+                        {step.label}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <p className="text-xs text-text-muted">
+                  分析通常需要 10-30 秒
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* Example Buttons */}
+          <div className="mt-4 flex flex-wrap gap-3 fade-up">
+            <span className="text-sm text-text-muted self-center mr-1">
+              示例数据：
+            </span>
+            {exampleLabels.map((ex) => (
+              <button
+                key={ex.key}
+                onClick={() => fillExample(ex.key)}
+                disabled={loading}
+                className="inline-flex items-center gap-1.5 px-4 py-2 bg-surface border border-border rounded-xl text-sm text-text-secondary hover:border-primary hover:text-primary transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <span>{ex.emoji}</span>
+                {ex.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Hint */}
+          <div className="mt-3 fade-up">
+            {charCount > 0 && charCount < 200 ? (
+              <p className="text-sm text-repetitive">
+                ⚠ 内容较短，分析结果可能不够准确
+              </p>
+            ) : (
+              <p className="text-sm text-text-muted">
+                建议粘贴 200 字以上的会议内容以获得更准确的分析结果
+              </p>
+            )}
+          </div>
+
+          {/* Analyze Button */}
+          <div className="mt-8 fade-up">
+            <button
+              onClick={handleAnalyze}
+              disabled={!canAnalyze}
+              className={`inline-flex items-center gap-2 px-10 py-4 rounded-xl text-lg font-semibold transition-all ${
+                loading
+                  ? "bg-primary/60 text-white cursor-wait"
+                  : canAnalyze
+                    ? "bg-primary text-white cta-btn hover:bg-primary-light"
+                    : "bg-border text-text-muted cursor-not-allowed"
+              }`}
+            >
+              {loading ? (
+                <>
+                  <svg
+                    className="animate-spin w-5 h-5"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                  >
+                    <circle
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="3"
+                      strokeDasharray="60 20"
+                    />
+                  </svg>
+                  AI 正在分析...
+                </>
+              ) : (
+                <>🔍 开始分析</>
+              )}
+            </button>
+          </div>
+        </div>
+      </main>
+      <Footer />
+    </>
+  );
+}
