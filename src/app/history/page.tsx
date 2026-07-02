@@ -14,6 +14,7 @@ import {
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
+import { IconBook, IconTrash, IconInbox, IconArrowRight } from "@/components/Icon";
 
 export default function HistoryPage() {
   useFadeUp();
@@ -56,8 +57,8 @@ export default function HistoryPage() {
         <div className="max-w-[800px] mx-auto px-4 sm:px-6">
           {/* Title */}
           <div className="mb-8 fade-up">
-            <h1 className="text-3xl sm:text-4xl font-extrabold text-text">
-              📚 分析历史
+            <h1 className="text-3xl sm:text-4xl font-extrabold text-text flex items-center gap-3">
+              <IconBook size={28} className="text-primary" /> 分析历史
             </h1>
             <p className="text-text-secondary mt-3 text-lg">
               查看你的所有会议分析记录
@@ -74,7 +75,9 @@ export default function HistoryPage() {
           {/* Empty State */}
           {!loading && history.length === 0 && (
             <div className="flex flex-col items-center justify-center py-20 text-center fade-up">
-              <div className="text-6xl">📭</div>
+              <div className="text-text-muted mx-auto">
+                <IconInbox size={48} />
+              </div>
               <h2 className="text-2xl font-extrabold text-text mt-4">
                 还没有分析记录
               </h2>
@@ -85,7 +88,7 @@ export default function HistoryPage() {
                 href="/analyze"
                 className="px-8 py-3 bg-primary text-white rounded-xl font-semibold cta-btn inline-flex items-center gap-2 mt-6"
               >
-                去分析第一场会议 →
+                去分析第一场会议 <IconArrowRight size={16} />
               </Link>
             </div>
           )}
@@ -101,7 +104,7 @@ export default function HistoryPage() {
                       {history.length}
                     </div>
                     <div className="text-xs text-text-secondary mt-1">
-                      📊 分析总次数
+                      分析总次数
                     </div>
                   </div>
                   <div className="text-center">
@@ -109,7 +112,7 @@ export default function HistoryPage() {
                       {avgScore}
                     </div>
                     <div className="text-xs text-text-secondary mt-1">
-                      📈 平均效率分
+                      平均效率分
                     </div>
                   </div>
                   <div className="text-center">
@@ -117,7 +120,7 @@ export default function HistoryPage() {
                       {totalActionItems}
                     </div>
                     <div className="text-xs text-text-secondary mt-1">
-                      ✅ 行动项总计
+                      行动项总计
                     </div>
                   </div>
                   <div className="text-center">
@@ -125,7 +128,7 @@ export default function HistoryPage() {
                       {minScore}
                     </div>
                     <div className="text-xs text-text-secondary mt-1">
-                      🔴 最低效会议
+                      最低效会议
                     </div>
                   </div>
                 </div>
@@ -197,7 +200,7 @@ export default function HistoryPage() {
                           onClick={() => viewReport(item)}
                           className="text-xs px-3 py-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary hover:text-white transition-all whitespace-nowrap"
                         >
-                          查看报告 →
+                          查看报告 <IconArrowRight size={12} />
                         </button>
                       </div>
                     </div>
@@ -210,7 +213,7 @@ export default function HistoryPage() {
                 onClick={() => setShowConfirm(true)}
                 className="text-sm text-nonsense hover:text-nonsense/80 transition-colors mt-4 mx-auto block"
               >
-                🗑️ 清除所有记录
+                <span className="inline-flex items-center gap-1.5"><IconTrash size={14} /> 清除所有记录</span>
               </button>
             </>
           )}

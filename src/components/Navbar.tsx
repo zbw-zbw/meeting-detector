@@ -3,12 +3,30 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
+import { IconChart, IconSun, IconMoon } from "@/components/Icon";
+import { useTheme } from "@/components/ThemeProvider";
 
 const navItems = [
   { label: "首页", href: "/" },
   { label: "开始分析", href: "/analyze", isPrimary: true },
   { label: "历史记录", href: "/history" },
 ];
+
+/** Reusable theme toggle button (sun/moon). */
+function ThemeToggleButton() {
+  const { theme, toggleTheme } = useTheme();
+  const isDark = theme === "dark";
+  return (
+    <button
+      onClick={toggleTheme}
+      className="p-2 rounded-lg hover:bg-surface transition-colors text-text-secondary hover:text-text"
+      aria-label={isDark ? "切换到浅色模式" : "切换到深色模式"}
+      title={isDark ? "切换到浅色模式" : "切换到深色模式"}
+    >
+      {isDark ? <IconSun size={20} /> : <IconMoon size={20} />}
+    </button>
+  );
+}
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -24,7 +42,7 @@ export default function Navbar() {
 
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-border transition-shadow duration-300 ${
+      className={`fixed top-0 left-0 right-0 z-50 bg-surface/80 backdrop-blur-md border-b border-border transition-shadow duration-300 ${
         scrolled ? "shadow-sm" : ""
       }`}
     >
@@ -34,7 +52,7 @@ export default function Navbar() {
           href="/"
           className="flex items-center gap-2 font-bold text-text text-lg shrink-0"
         >
-          <span className="text-2xl">📊</span>
+          <IconChart size={24} className="text-primary" />
           <span>会议废话检测器</span>
         </Link>
 
@@ -78,6 +96,11 @@ export default function Navbar() {
           })}
         </ul>
 
+        {/* Desktop Theme Toggle */}
+        <div className="hidden md:flex items-center">
+          <ThemeToggleButton />
+        </div>
+
         {/* Mobile Hamburger */}
         <button
           className="md:hidden p-2 rounded-lg hover:bg-surface transition-colors"
@@ -111,7 +134,7 @@ export default function Navbar() {
 
       {/* Mobile Menu */}
       {mobileOpen && (
-        <div className="md:hidden bg-white border-b border-border px-4 pb-4 mobile-menu-animate">
+        <div className="md:hidden bg-surface border-b border-border px-4 pb-4 mobile-menu-animate">
           <ul className="flex flex-col gap-1">
             {navItems.map((item) => {
               const isActive = pathname === item.href;
@@ -149,6 +172,10 @@ export default function Navbar() {
               );
             })}
           </ul>
+          {/* Mobile Theme Toggle */}
+          <div className="mt-2 pt-3 border-t border-border-light flex items-center">
+            <ThemeToggleButton />
+          </div>
         </div>
       )}
     </header>

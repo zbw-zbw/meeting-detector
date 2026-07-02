@@ -8,6 +8,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/components/ToastProvider";
 import { saveToHistory } from "@/lib/history";
+import { IconClipboard, IconCalendar, IconLightbulb, IconSearch, IconAlert, IconFileText, IconClose } from "@/components/Icon";
 
 const EXAMPLES: Record<string, string> = {
   planning: `会议主题：Q3产品规划讨论会
@@ -89,10 +90,10 @@ const EXAMPLES: Record<string, string> = {
 小王：暗黑模式先放着，不着急。`,
 };
 
-const exampleLabels: { key: string; label: string; emoji: string }[] = [
-  { key: "planning", label: "Q3产品规划会", emoji: "📋" },
-  { key: "weekly", label: "周会同步", emoji: "📅" },
-  { key: "brainstorm", label: "头脑风暴会", emoji: "💡" },
+const exampleLabels: { key: string; label: string; icon: React.ReactNode }[] = [
+  { key: "planning", label: "Q3产品规划会", icon: <IconClipboard size={14} /> },
+  { key: "weekly", label: "周会同步", icon: <IconCalendar size={14} /> },
+  { key: "brainstorm", label: "头脑风暴会", icon: <IconLightbulb size={14} /> },
 ];
 
 // 加载步骤
@@ -238,6 +239,37 @@ export default function AnalyzePage() {
     }
   }, [loading, showToast]);
 
+  const handlePasteFromClipboard = useCallback(async () => {
+    if (loading) return;
+    try {
+      const clipText = await navigator.clipboard.readText();
+      if (clipText) {
+        setText(clipText);
+        showToast("已粘贴剪贴板内容", "success");
+        textareaRef.current?.focus();
+      } else {
+        showToast("剪贴板为空", "info");
+      }
+    } catch {
+      showToast("无法读取剪贴板，请手动粘贴", "error");
+    }
+  }, [loading, showToast]);
+
+  const handleClear = useCallback(() => {
+    if (loading) return;
+    setText("");
+    textareaRef.current?.focus();
+  }, [loading]);
+
+  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+      e.preventDefault();
+      if (canAnalyze) {
+        handleAnalyze();
+      }
+    }
+  }, [canAnalyze]);
+
   return (
     <>
       <Navbar />
@@ -273,6 +305,7 @@ export default function AnalyzePage() {
               ref={textareaRef}
               value={text}
               onChange={(e) => setText(e.target.value)}
+              onKeyDown={handleKeyDown}
               disabled={loading}
               placeholder={`在这里粘贴会议纪要或文字记录...\n\n支持任意格式，建议包含发言人标注以获得更准确的分析。`}
               className="w-full min-h-[300px] sm:min-h-[400px] bg-surface rounded-2xl border border-border p-5 sm:p-6 text-text text-base leading-relaxed resize-y placeholder:text-text-muted focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none disabled:opacity-60 disabled:cursor-not-allowed"
@@ -280,15 +313,14 @@ export default function AnalyzePage() {
             {isDragging && (
               <div className="absolute inset-0 bg-primary/10 backdrop-blur-sm rounded-2xl border-2 border-dashed border-primary flex items-center justify-center z-20 pointer-events-none">
                 <div className="text-center">
-                  <p className="text-2xl mb-2">📄</p>
+                  <div className="mb-2 text-primary">
+                    <IconFileText size={28} />
+                  </div>
                   <p className="text-primary font-semibold">拖拽 .txt 文件到此处</p>
                   <p className="text-primary/60 text-sm mt-1">释放鼠标即可加载文件内容</p>
                 </div>
               </div>
             )}
-            <div className="absolute bottom-4 right-4 text-sm text-text-muted pointer-events-none">
-              {charCount} 字
-            </div>
 
             {/* Loading Overlay */}
             {loading && (
@@ -374,6 +406,31 @@ export default function AnalyzePage() {
             )}
           </div>
 
+          {/* Toolbar */}
+          <div className="mt-3 flex items-center justify-between fade-up">
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handlePasteFromClipboard}
+                disabled={loading}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-text-secondary hover:text-primary hover:bg-primary/5 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <IconClipboard size={14} /> 粘贴
+              </button>
+              {text.length > 0 && (
+                <button
+                  onClick={handleClear}
+                  disabled={loading}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-text-secondary hover:text-nonsense hover:bg-nonsense/5 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <IconClose size={14} /> 清空
+                </button>
+              )}
+            </div>
+            <span className={`text-sm transition-colors ${charCount > 0 ? "text-text-secondary" : "text-text-muted"}`}>
+              {charCount} 字
+            </span>
+          </div>
+
           {/* Example Buttons */}
           <div className="mt-4 flex flex-wrap gap-3 fade-up">
             <span className="text-sm text-text-muted self-center mr-1">
@@ -386,8 +443,7 @@ export default function AnalyzePage() {
                 disabled={loading}
                 className="inline-flex items-center gap-1.5 px-4 py-2 bg-surface border border-border rounded-xl text-sm text-text-secondary hover:border-primary hover:text-primary transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <span>{ex.emoji}</span>
-                {ex.label}
+                <span className="flex items-center gap-1.5">{ex.icon}{ex.label}</span>
               </button>
             ))}
           </div>
@@ -395,8 +451,8 @@ export default function AnalyzePage() {
           {/* Hint */}
           <div className="mt-3 fade-up">
             {charCount > 0 && charCount < 200 ? (
-              <p className="text-sm text-repetitive">
-                ⚠ 内容较短，分析结果可能不够准确
+              <p className="text-sm text-repetitive flex items-center gap-1.5">
+                <IconAlert size={14} className="text-repetitive" /> 内容较短，分析结果可能不够准确
               </p>
             ) : (
               <p className="text-sm text-text-muted">
@@ -437,9 +493,14 @@ export default function AnalyzePage() {
                   AI 正在分析...
                 </>
               ) : (
-                <>🔍 开始分析</>
+                <><IconSearch size={18} /> 开始分析</>
               )}
             </button>
+            {canAnalyze && !loading && (
+              <p className="text-xs text-text-muted mt-3">
+                按 <kbd className="px-1.5 py-0.5 rounded bg-surface border border-border text-text-secondary text-xs font-mono">Ctrl</kbd> + <kbd className="px-1.5 py-0.5 rounded bg-surface border border-border text-text-secondary text-xs font-mono">Enter</kbd> 快速开始分析
+              </p>
+            )}
           </div>
         </div>
       </main>

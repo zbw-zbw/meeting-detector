@@ -1,52 +1,70 @@
 "use client";
 
+import { IconClipboard, IconBot, IconChart } from "@/components/Icon";
+
 export default function StepsSection() {
   const steps = [
     {
-      number: 1,
-      emoji: "📋",
+      number: "01",
+      icon: <IconClipboard size={22} className="text-primary" />,
       title: "粘贴文本",
       description: "粘贴会议纪要或文字稿，支持任意长度",
-      borderColor: "border-primary",
     },
     {
-      number: 2,
-      emoji: "🤖",
+      number: "02",
+      icon: <IconBot size={22} className="text-effective" />,
       title: "AI 分析",
-      description: "DeepSeek AI 逐句分析，10秒出报告",
-      borderColor: "border-effective",
+      description: "DeepSeek 逐句分析，10 秒出报告",
     },
     {
-      number: 3,
-      emoji: "📊",
+      number: "03",
+      icon: <IconChart size={22} className="text-nonsense" />,
       title: "查看报告",
       description: "废话标红、重点标绿、行动项一键提取",
-      borderColor: "border-nonsense",
     },
   ];
 
   return (
-    <section className="py-20">
+    <section className="py-24 border-t border-border-light">
       <div className="max-w-[1200px] mx-auto px-4 sm:px-6 fade-up">
-        <h2 className="text-center text-3xl sm:text-4xl font-extrabold text-text">
-          三步搞定会议分析
-        </h2>
+        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-16">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-text-muted">
+              02 — 流程
+            </p>
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-text mt-4 leading-tight">
+              三步搞定会议分析
+            </h2>
+          </div>
+          <p className="text-text-secondary max-w-xs leading-relaxed">
+            从粘贴到报告，整个过程不超过一分钟。
+          </p>
+        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-10">
-          {steps.map((step) => (
-            <div
-              key={step.number}
-              className={`bg-surface rounded-2xl p-6 shadow-sm border-b-4 ${step.borderColor}`}
-            >
-              {/* Circle Number */}
-              <div className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-bold text-lg">
-                {step.number}
+        {/* Timeline */}
+        <div className="relative">
+          {/* Connecting line — desktop */}
+          <div className="hidden md:block absolute top-6 left-[16.66%] right-[16.66%] h-px bg-border" />
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-12 md:gap-8">
+            {steps.map((step) => (
+              <div key={step.number} className="relative text-center md:px-4">
+                {/* Number node */}
+                <div className="w-12 h-12 mx-auto rounded-full bg-bg border border-border flex items-center justify-center text-sm font-bold text-text relative z-10">
+                  {step.number}
+                </div>
+
+                {/* Content */}
+                <div className="flex items-center justify-center gap-2 mt-5">
+                  {step.icon}
+                  <h3 className="text-lg font-bold text-text">{step.title}</h3>
+                </div>
+                <p className="text-text-secondary text-sm mt-2 leading-relaxed md:max-w-[220px] md:mx-auto">
+                  {step.description}
+                </p>
               </div>
-              <div className="text-3xl mt-3">{step.emoji}</div>
-              <h3 className="font-semibold mt-3 text-text">{step.title}</h3>
-              <p className="text-text-secondary text-sm mt-2">{step.description}</p>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </div>
     </section>

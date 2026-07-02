@@ -1,44 +1,58 @@
 "use client";
 
+import { IconTarget, IconUsers, IconMessageSquare } from "@/components/Icon";
+
 export default function ScenariosSection() {
   const scenarios = [
     {
-      emoji: "👨‍💼",
+      icon: <IconTarget size={20} className="text-primary" />,
       role: "项目经理",
-      description: "每天3-5个会，需要快速提取行动项分发给团队",
+      description: "每天 3-5 个会，需要快速提取行动项分发给团队",
     },
     {
-      emoji: "👩‍💻",
+      icon: <IconUsers size={20} className="text-primary" />,
       role: "普通员工",
       description: "被拉进各种会议，只想知道跟自己相关的 TODO",
     },
     {
-      emoji: "👨‍💼",
+      icon: <IconMessageSquare size={20} className="text-primary" />,
       role: "团队 Leader",
       description: "想用数据推动团队改善会议文化，减少无效会议",
     },
   ];
 
   return (
-    <section className="py-20">
+    <section className="py-20 border-t border-border-light">
       <div className="max-w-[1200px] mx-auto px-4 sm:px-6 fade-up">
-        <h2 className="text-center text-3xl sm:text-4xl font-extrabold text-text">
-          谁需要会议废话检测器？
-        </h2>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
+          <div className="lg:col-span-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-text-muted">
+              04 — 人群
+            </p>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-text mt-4 leading-tight">
+              为这些人设计
+            </h2>
+          </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-10">
-          {scenarios.map((scenario, index) => (
-            <div
-              key={index}
-              className="bg-surface rounded-2xl p-6 shadow-sm"
-            >
-              <div className="text-4xl mb-3">{scenario.emoji}</div>
-              <h3 className="font-semibold text-text text-lg">{scenario.role}</h3>
-              <p className="text-text-secondary text-sm mt-2">
-                {scenario.description}
-              </p>
-            </div>
-          ))}
+          <div className="lg:col-span-8">
+            <ul className="divide-y divide-border-light">
+              {scenarios.map((scenario, index) => (
+                <li
+                  key={index}
+                  className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-5 py-5 first:pt-0 last:pb-0"
+                >
+                  <span className="shrink-0 flex items-center gap-3">
+                    {scenario.icon}
+                    <span className="font-bold text-text">{scenario.role}</span>
+                  </span>
+                  <span className="hidden sm:block w-px h-5 bg-border-light" />
+                  <span className="text-text-secondary text-sm leading-relaxed">
+                    {scenario.description}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
       </div>
     </section>

@@ -7,6 +7,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { IconCheckCircle, IconAlert, IconClose } from "@/components/Icon";
 
 type ToastType = "success" | "error" | "info";
 
@@ -31,10 +32,10 @@ export function useToast() {
   return ctx;
 }
 
-const toastStyles: Record<ToastType, { bg: string; icon: string }> = {
-  success: { bg: "bg-effective", icon: "✅" },
-  error: { bg: "bg-nonsense", icon: "⚠" },
-  info: { bg: "bg-primary", icon: "ℹ" },
+const toastConfig: Record<ToastType, { bg: string; icon: typeof IconCheckCircle }> = {
+  success: { bg: "bg-effective", icon: IconCheckCircle },
+  error: { bg: "bg-nonsense", icon: IconAlert },
+  info: { bg: "bg-primary", icon: IconCheckCircle },
 };
 
 let toastIdCounter = 0;
@@ -62,23 +63,24 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       {/* Toast Container */}
       <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[100] flex flex-col gap-2 w-full max-w-sm px-4 pointer-events-none">
         {toasts.map((toast) => {
-          const style = toastStyles[toast.type];
+          const cfg = toastConfig[toast.type];
+          const ToastIcon = cfg.icon;
           return (
             <div
               key={toast.id}
-              className={`flex items-center gap-3 px-4 py-3 rounded-xl shadow-lg text-white text-sm font-medium pointer-events-auto ${style.bg}`}
+              className={`flex items-center gap-2.5 px-4 py-3 rounded-xl shadow-lg text-white text-sm font-medium pointer-events-auto ${cfg.bg}`}
               style={{
                 animation: "toastSlideIn 0.3s ease-out",
               }}
             >
-              <span className="shrink-0">{style.icon}</span>
+              <ToastIcon size={16} className="shrink-0 opacity-90" />
               <span className="flex-1">{toast.message}</span>
               <button
                 onClick={() => removeToast(toast.id)}
                 className="shrink-0 opacity-70 hover:opacity-100 transition-opacity"
                 aria-label="关闭通知"
               >
-                ✕
+                <IconClose size={14} />
               </button>
             </div>
           );

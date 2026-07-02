@@ -8,6 +8,15 @@ import { useState, useEffect, useCallback } from "react";
 import type { AnalysisResult } from "@/types/analysis";
 import { useToast } from "@/components/ToastProvider";
 import { normalizeBreakdown } from "@/lib/history";
+import { downloadMarkdown } from "@/lib/export";
+import {
+  IconArrowLeft, IconArrowRight, IconPin, IconClock, IconUsers, IconFileText,
+  IconTrendingUp, IconCheckCircle, IconCheck, IconLightbulb,
+  IconShare, IconCopy, IconRefresh, IconCalendar, IconUser,
+  IconBook, IconLayers, IconAlert, IconInbox, IconClipboard,
+  IconSearch, IconChart, IconDot, IconChevronUp, IconChevronDown,
+  IconDownload
+} from "@/components/Icon";
 
 /* ─── helpers ─── */
 
@@ -131,11 +140,11 @@ export default function ResultPage() {
   useFadeUp();
   const { showToast } = useToast();
 
-  /* count-up values */
+  /* count-up values — must be called unconditionally (before any early returns) */
   const animScore = useCountUp(result?.score ?? 0, 1000, 200);
-  const animEffective = useCountUp(result?.breakdown.effective ?? 0, 1000, 300);
-  const animRepetitive = useCountUp(result?.breakdown.repetitive ?? 0, 1000, 400);
-  const animNonsense = useCountUp(result?.breakdown.nonsense ?? 0, 1000, 500);
+  const animEffective = useCountUp(result?.breakdown?.effective ?? 0, 1000, 300);
+  const animRepetitive = useCountUp(result?.breakdown?.repetitive ?? 0, 1000, 400);
+  const animNonsense = useCountUp(result?.breakdown?.nonsense ?? 0, 1000, 500);
 
   /* load data — runs only on client after hydration */
   useEffect(() => {
@@ -191,7 +200,7 @@ export default function ResultPage() {
   const handleCopy = useCallback(() => {
     if (!result) return;
     const lines: string[] = [];
-    lines.push(`📊 会议效率报告 - ${result.meetingTitle}`);
+    lines.push(`[会议效率报告] - ${result.meetingTitle}`);
     lines.push("━━━━━━━━━━━━━━━━━━");
     lines.push(
       `效率评分：${result.score}分（${result.levelLabel}）`,
@@ -200,14 +209,14 @@ export default function ResultPage() {
       `有效信息：${result.breakdown.effective}% | 重复内容：${result.breakdown.repetitive}% | 废话占比：${result.breakdown.nonsense}%`,
     );
     lines.push("━━━━━━━━━━━━━━━━━━");
-    lines.push("✅ 行动项：");
+    lines.push("行动项：");
     result.actionItems.forEach((item) => {
       lines.push(
         `• ${item.content} (@${item.assignee}, ${item.deadline})`,
       );
     });
     lines.push("━━━━━━━━━━━━━━━━━━");
-    lines.push("💡 改进建议：");
+    lines.push("改进建议：");
     result.suggestions.forEach((s, i) => {
       lines.push(`${i + 1}. ${s}`);
     });
@@ -221,7 +230,7 @@ export default function ResultPage() {
   /* share report */
   const handleShare = useCallback(() => {
     if (!result) return;
-    const shareText = `📊 会议效率报告 - ${result.meetingTitle}\n效率评分：${result.score}分（${result.levelLabel}）\n有效信息：${result.breakdown.effective}% | 重复：${result.breakdown.repetitive}% | 废话：${result.breakdown.nonsense}%`;
+    const shareText = `[会议效率报告] - ${result.meetingTitle}\n效率评分：${result.score}分（${result.levelLabel}）\n有效信息：${result.breakdown.effective}% | 重复：${result.breakdown.repetitive}% | 废话：${result.breakdown.nonsense}%`;
 
     if (navigator.share) {
       navigator.share({
@@ -239,6 +248,22 @@ export default function ResultPage() {
       });
     }
   }, [result, showToast]);
+
+  /* export report as Markdown */
+  const handleExport = useCallback(() => {
+    if (!result) return;
+    try {
+      downloadMarkdown(result);
+      showToast("报告已导出为 Markdown", "success");
+    } catch {
+      showToast("导出失败，请重试", "error");
+    }
+  }, [result, showToast]);
+
+  /* print report */
+  const handlePrint = useCallback(() => {
+    window.print();
+  }, []);
 
   /* donut chart math */
   const RADIUS = 80;
@@ -270,7 +295,9 @@ export default function ResultPage() {
         <main className="pt-24 pb-20">
           <div className="max-w-[600px] mx-auto px-4 sm:px-6 text-center">
             <div className="mb-8">
-              <p className="text-6xl mb-4">📭</p>
+              <div className="mb-4">
+                <IconInbox size={48} className="text-text-muted mx-auto" />
+              </div>
               <h1 className="text-2xl sm:text-3xl font-extrabold text-text">
                 还没有分析结果
               </h1>
@@ -282,7 +309,7 @@ export default function ResultPage() {
               href="/analyze"
               className="inline-flex items-center gap-2 px-8 py-3 bg-primary text-white rounded-xl font-semibold cta-btn"
             >
-              开始分析 →
+              开始分析 <IconArrowRight size={16} />
             </Link>
           </div>
         </main>
@@ -309,14 +336,14 @@ export default function ResultPage() {
                 href="/analyze"
                 className="text-sm text-text-secondary hover:text-primary transition-colors"
               >
-                &larr; 返回分析
+                <IconArrowLeft size={14} /> 返回分析
               </Link>
               <div className="flex items-center gap-3">
                 <button
                   onClick={handleShare}
                   className="text-sm text-text-secondary hover:text-primary transition-colors inline-flex items-center gap-1"
                 >
-                  {shared ? "✅ 已分享" : "📤 分享结果"}
+                  {shared ? (<><IconCheck size={14} /> 已分享</>) : (<><IconShare size={14} /> 分享结果</>)}
                 </button>
                 <span className="text-sm text-text-muted">
                   {formatAnalyzedAt(result.analyzedAt)}
@@ -325,14 +352,15 @@ export default function ResultPage() {
             </div>
             {/* title */}
             <h1 className="text-2xl sm:text-3xl font-extrabold text-text mt-4">
-              📊 会议效率报告
+              <IconChart size={24} className="inline text-primary mr-2" />
+              会议效率报告
             </h1>
             {/* info row */}
             <div className="flex flex-wrap gap-x-6 gap-y-2 mt-3 text-sm text-text-secondary">
-              <span>📌 会议主题：{result.meetingTitle}</span>
-              <span>⏱️ 时长：{result.duration}</span>
-              <span>👥 参会人数：{result.participantCount} 人</span>
-              <span>📝 文字量：{result.wordCount} 字</span>
+              <span className="flex items-center gap-1"><IconPin size={14} className="text-text-muted" />会议主题：{result.meetingTitle}</span>
+              <span className="flex items-center gap-1"><IconClock size={14} className="text-text-muted" />时长：{result.duration}</span>
+              <span className="flex items-center gap-1"><IconUsers size={14} className="text-text-muted" />参会人数：{result.participantCount} 人</span>
+              <span className="flex items-center gap-1"><IconFileText size={14} className="text-text-muted" />文字量：{result.wordCount} 字</span>
             </div>
           </div>
 
@@ -390,7 +418,8 @@ export default function ResultPage() {
           ═══════════════════════════════════════════ */}
           <div className="bg-surface rounded-2xl p-6 sm:p-8 shadow-sm border border-border mb-6 fade-up">
             <h2 className="text-lg font-bold text-text mb-6">
-              📈 内容结构分析
+              <IconTrendingUp size={20} className="inline mr-2 text-primary" />
+              内容结构分析
             </h2>
 
             <div className="flex flex-col lg:flex-row gap-8">
@@ -572,7 +601,8 @@ export default function ResultPage() {
           {result.sentences.length > 0 && (
             <div className="bg-surface rounded-2xl p-6 sm:p-8 shadow-sm border border-border mb-6 fade-up">
               <h2 className="text-lg font-bold text-text">
-                🔍 逐句分析详情
+                <IconSearch size={20} className="inline mr-2 text-primary" />
+                逐句分析详情
               </h2>
 
               {/* Filter bar */}
@@ -593,9 +623,9 @@ export default function ResultPage() {
                       }`}
                     >
                       {btn.key === "all" && "全部"}
-                      {btn.key === "effective" && "🟢 有效"}
-                      {btn.key === "repetitive" && "🟡 重复"}
-                      {btn.key === "nonsense" && "🔴 废话"}
+                      {btn.key === "effective" && (<span className="inline-flex items-center gap-1"><IconDot size={10} className="text-effective" />有效</span>)}
+                      {btn.key === "repetitive" && (<span className="inline-flex items-center gap-1"><IconDot size={10} className="text-repetitive" />重复</span>)}
+                      {btn.key === "nonsense" && (<span className="inline-flex items-center gap-1"><IconDot size={10} className="text-nonsense" />废话</span>)}
                     </button>
                   );
                 })}
@@ -623,7 +653,7 @@ export default function ResultPage() {
                       key={i}
                       className={`p-4 rounded-xl border-l-4 mb-3 transition-all duration-300 ${
                         getTypeBorderClass(s.type)
-                      } ${isNonsense ? "bg-nonsense-bg" : "bg-white"}`}
+                      } ${isNonsense ? "bg-nonsense-bg" : "bg-surface"}`}
                     >
                       <div className="flex flex-col sm:flex-row sm:items-start gap-2">
                         {/* speaker badge */}
@@ -698,9 +728,11 @@ export default function ResultPage() {
                     onClick={() => setShowAll((v) => !v)}
                     className="text-sm text-primary hover:underline cursor-pointer"
                   >
-                    {showAll
-                      ? "收起 ↑"
-                      : `展开更多 (${remainingCount} 条) ↓`}
+                    {showAll ? (
+                      <span className="inline-flex items-center gap-1">收起 <IconChevronUp size={14} /></span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1">展开更多 ({remainingCount} 条) <IconChevronDown size={14} /></span>
+                    )}
                   </button>
                 </div>
               )}
@@ -709,6 +741,7 @@ export default function ResultPage() {
 
           {result.sentences.length === 0 && (
             <div className="bg-surface rounded-2xl p-6 sm:p-8 shadow-sm border border-border mb-6 fade-up text-center">
+              <IconAlert size={20} className="text-text-muted mx-auto mb-2 block" />
               <p className="text-text-muted">AI 未能完成逐句分析</p>
             </div>
           )}
@@ -720,7 +753,8 @@ export default function ResultPage() {
             <div className="bg-surface rounded-2xl p-6 sm:p-8 shadow-sm border border-border mb-6 fade-up">
               <div className="flex items-center gap-3 mb-4">
                 <h2 className="text-lg font-bold text-text">
-                  ✅ 行动项清单
+                  <IconCheckCircle size={20} className="inline mr-2 text-primary" />
+                  行动项清单
                 </h2>
                 <span className="text-sm bg-primary/10 text-primary px-2.5 py-0.5 rounded-full font-medium">
                   {result.actionItems.length}
@@ -781,11 +815,13 @@ export default function ResultPage() {
                           {item.content}
                         </p>
                         <div className="flex flex-wrap gap-2 mt-2">
-                          <span className="text-xs bg-primary/5 text-primary px-2 py-0.5 rounded">
-                            👤 {item.assignee}
+                          <span className="inline-flex items-center gap-1 text-xs bg-primary/5 text-primary px-2 py-0.5 rounded">
+                            <IconUser size={12} className="text-primary" />
+                            {item.assignee}
                           </span>
-                          <span className="text-xs bg-bg text-text-secondary px-2 py-0.5 rounded">
-                            📅 {item.deadline}
+                          <span className="inline-flex items-center gap-1 text-xs bg-bg text-text-secondary px-2 py-0.5 rounded">
+                            <IconCalendar size={12} className="text-text-muted" />
+                            {item.deadline}
                           </span>
                           <span
                             className={`text-xs px-2 py-0.5 rounded ${priorityBgs[item.priority]}`}
@@ -808,6 +844,7 @@ export default function ResultPage() {
 
           {result.actionItems.length === 0 && (
             <div className="bg-surface rounded-2xl p-6 sm:p-8 shadow-sm border border-border mb-6 fade-up text-center">
+              <IconAlert size={20} className="text-text-muted mx-auto mb-2 block" />
               <p className="text-text-muted">未识别到明确的行动项</p>
             </div>
           )}
@@ -820,7 +857,8 @@ export default function ResultPage() {
             {/* Left — Summary */}
             <div className="bg-surface rounded-2xl p-6 sm:p-8 shadow-sm border border-border fade-up">
               <h2 className="text-lg font-bold text-text mb-4">
-                📋 会议摘要
+                <IconBook size={20} className="inline mr-2 text-primary" />
+                会议摘要
               </h2>
               <p className="text-text-secondary leading-relaxed">
                 {result.summary}
@@ -835,9 +873,9 @@ export default function ResultPage() {
                     {result.keyDecisions.map((decision, i) => (
                       <li
                         key={i}
-                        className="text-text-secondary text-sm mb-2"
+                        className="text-text-secondary text-sm mb-2 flex items-start gap-1.5"
                       >
-                        <span className="mr-1.5 text-primary">✦</span>
+                        <IconCheck size={12} className="text-primary shrink-0 mt-0.5" />
                         {decision}
                       </li>
                     ))}
@@ -850,7 +888,8 @@ export default function ResultPage() {
             {result.suggestions.length > 0 && (
               <div className="bg-surface rounded-2xl p-6 sm:p-8 shadow-sm border border-border fade-up">
                 <h2 className="text-lg font-bold text-text mb-4">
-                  💡 改进建议
+                  <IconLightbulb size={20} className="inline mr-2 text-primary" />
+                  改进建议
                 </h2>
                 <div>
                   {result.suggestions.map((suggestion, i) => (
@@ -876,9 +915,40 @@ export default function ResultPage() {
             {/* Copy Report */}
             <button
               onClick={handleCopy}
-              className="px-6 py-3 bg-surface border border-border rounded-xl text-text-secondary font-medium hover:border-primary hover:text-primary transition-all cursor-pointer"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-surface border border-border rounded-xl text-text-secondary font-medium hover:border-primary hover:text-primary transition-all cursor-pointer"
             >
-              {copied ? "✅ 已复制" : "📋 复制报告"}
+              {copied ? (<><IconCheck size={16} /> 已复制</>) : (<><IconCopy size={16} /> 复制报告</>)}
+            </button>
+
+            {/* Export as Markdown */}
+            <button
+              onClick={handleExport}
+              className="inline-flex items-center gap-2 px-6 py-3 bg-surface border border-border rounded-xl text-text-secondary font-medium hover:border-primary hover:text-primary transition-all cursor-pointer"
+            >
+              <IconDownload size={16} />
+              导出报告
+            </button>
+
+            {/* Print Report */}
+            <button
+              onClick={handlePrint}
+              className="inline-flex items-center gap-2 px-6 py-3 bg-surface border border-border rounded-xl text-text-secondary font-medium hover:border-primary hover:text-primary transition-all cursor-pointer"
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <polyline points="6 9 6 2 18 2 18 9" />
+                <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+                <rect x="6" y="14" width="12" height="8" />
+              </svg>
+              打印报告
             </button>
 
             {/* Re-analyze */}
@@ -886,7 +956,8 @@ export default function ResultPage() {
               href="/analyze"
               className="px-6 py-3 bg-primary text-white rounded-xl font-semibold cta-btn inline-flex items-center gap-2"
             >
-              🔍 重新分析
+              <IconRefresh size={16} />
+              重新分析
             </Link>
           </div>
         </div>
