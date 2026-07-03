@@ -166,3 +166,39 @@ export function downloadMarkdown(result: AnalysisResult): void {
 
   URL.revokeObjectURL(url);
 }
+
+/** 导出逐句分析数据为 CSV */
+export function downloadCSV(result: AnalysisResult): void {
+  const BOM = "\uFEFF"; // UTF-8 BOM for Excel compatibility
+  const header = ["序号", "发言人", "内容", "类型", "置信度(%)", "原因"].join(",");
+  const rows = result.sentences.map((s, i) =>
+    [
+      i + 1,
+      s.speaker || "未知",
+      `"${s.text.replace(/"/g, '""')}"`,
+      s.type === "effective" ? "有效" : s.type === "repetitive" ? "重复" : "废话",
+      s.confidence,
+      `"${s.reason.replace(/"/g, '""')}"`,
+    ].join(",")
+  );
+  const csv = BOM + [header, ...rows].join("\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `${result.meetingTitle}_逐句分析.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+/** 导出完整分析结果为 JSON */
+export function downloadJSON(result: AnalysisResult): void {
+  const json = JSON.stringify(result, null, 2);
+  const blob = new Blob([json], { type: "application/json;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `${result.meetingTitle}_分析结果.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}

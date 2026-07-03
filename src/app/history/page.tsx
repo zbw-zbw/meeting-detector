@@ -14,7 +14,7 @@ import {
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
-import { IconBook, IconTrash, IconInbox, IconArrowRight, IconSearch, IconX, IconTrendingUp } from "@/components/Icon";
+import { IconBook, IconTrash, IconInbox, IconArrowRight, IconSearch, IconX, IconTrendingUp, IconChart } from "@/components/Icon";
 
 export default function HistoryPage() {
   useFadeUp();
@@ -99,6 +99,8 @@ export default function HistoryPage() {
             <p className="text-text-secondary mt-3 text-lg">
               查看你的所有会议分析记录
             </p>
+            {/* Compare prompt */}
+            <ComparePrompt />
           </div>
 
           {/* Loading State */}
@@ -345,12 +347,47 @@ export default function HistoryPage() {
                             style={{ width: `${nonPct}%` }}
                           />
                         </div>
+                        <div className="flex items-center gap-2">
                         <button
                           onClick={() => viewReport(item)}
                           className="text-xs px-3 py-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary hover:text-white transition-all whitespace-nowrap"
                         >
                           查看报告 <IconArrowRight size={12} />
                         </button>
+                        <Link
+                          href="/compare"
+                          onClick={(e) => {
+                            const existing = JSON.parse(localStorage.getItem("compareItems") || "[]");
+                            if (existing.length >= 4) {
+                              e.preventDefault();
+                              showToast("最多对比 4 场会议", "info");
+                              return;
+                            }
+                            if (existing.find((c: { id: string }) => c.id === item.id)) {
+                              e.preventDefault();
+                              showToast("该会议已在对比列表中", "info");
+                              return;
+                            }
+                            existing.push({
+                              id: item.id,
+                              title: item.meetingTitle,
+                              score: item.score,
+                              levelLabel: item.levelLabel,
+                              breakdown: item.breakdown,
+                              sentenceCount: 0,
+                              actionItemCount: item.actionItemCount,
+                              wordCount: item.wordCount,
+                              participantCount: 0,
+                              duration: "",
+                              analyzedAt: item.analyzedAt,
+                            });
+                            localStorage.setItem("compareItems", JSON.stringify(existing));
+                          }}
+                          className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium text-primary border border-primary/30 hover:bg-primary/5 transition-all"
+                        >
+                          <IconChart size={12} /> 对比
+                        </Link>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -407,5 +444,35 @@ export default function HistoryPage() {
 
       <Footer />
     </>
+  );
+}
+
+function ComparePrompt() {
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    const update = () => {
+      try {
+        const items = JSON.parse(localStorage.getItem("compareItems") || "[]");
+        setCount(items.length);
+      } catch { /* ignore */ }
+    };
+    update();
+    window.addEventListener("storage", update);
+    return () => window.removeEventListener("storage", update);
+  }, []);
+
+  if (count === 0) return null;
+
+  return (
+    <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-primary/5 border border-primary/10 mt-4 fade-up">
+      <IconChart size={16} className="text-primary shrink-0" />
+      <p className="text-sm text-text flex-1">
+        已选择 <strong className="text-primary">{count}</strong> 场会议进行对比
+      </p>
+      <Link href="/compare" className="text-sm text-primary font-medium hover:underline">
+        查看对比
+      </Link>
+    </div>
   );
 }

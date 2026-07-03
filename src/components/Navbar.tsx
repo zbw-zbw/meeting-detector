@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState, useEffect } from "react";
-import { IconChart, IconSun, IconMoon } from "@/components/Icon";
+import { useState, useEffect, useRef } from "react";
+import { IconChart, IconSun, IconMoon, IconPalette } from "@/components/Icon";
 import { useTheme } from "@/components/ThemeProvider";
 
 const navItems = [
@@ -32,6 +32,9 @@ export default function Navbar() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [showThemePicker, setShowThemePicker] = useState(false);
+  const [currentTheme, setCurrentTheme] = useState("");
+  const themePickerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 50);
@@ -39,6 +42,26 @@ export default function Navbar() {
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("themeColor") || "";
+    if (saved) {
+      document.documentElement.setAttribute("data-theme", saved);
+      setCurrentTheme(saved);
+    }
+  }, []);
+
+  /* close theme picker on outside click */
+  useEffect(() => {
+    if (!showThemePicker) return;
+    const handleClick = (e: MouseEvent) => {
+      if (themePickerRef.current && !themePickerRef.current.contains(e.target as Node)) {
+        setShowThemePicker(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [showThemePicker]);
 
   return (
     <header
@@ -97,7 +120,47 @@ export default function Navbar() {
         </ul>
 
         {/* Desktop Theme Toggle */}
-        <div className="hidden md:flex items-center">
+        <div className="hidden md:flex items-center gap-1">
+          {/* Theme color picker */}
+          <div className="relative" ref={themePickerRef}>
+            <button
+              onClick={() => setShowThemePicker((v) => !v)}
+              className="p-2 rounded-lg text-text-secondary hover:text-primary hover:bg-surface transition-all"
+              title="切换主题色"
+            >
+              <IconPalette size={18} />
+            </button>
+            {showThemePicker && (
+              <div className="absolute right-0 top-full mt-2 bg-surface border border-border rounded-xl shadow-lg p-2 z-50 flex gap-1.5">
+                {[
+                  { key: "", label: "蓝", color: "#2563eb" },
+                  { key: "purple", label: "紫", color: "#8b5cf6" },
+                  { key: "green", label: "绿", color: "#059669" },
+                  { key: "orange", label: "橙", color: "#ea580c" },
+                ].map((t) => (
+                  <button
+                    key={t.key}
+                    onClick={() => {
+                      if (t.key) {
+                        document.documentElement.setAttribute("data-theme", t.key);
+                        localStorage.setItem("themeColor", t.key);
+                      } else {
+                        document.documentElement.removeAttribute("data-theme");
+                        localStorage.removeItem("themeColor");
+                      }
+                      setCurrentTheme(t.key);
+                      setShowThemePicker(false);
+                    }}
+                    className={`w-8 h-8 rounded-full border-2 transition-all hover:scale-110 ${
+                      currentTheme === t.key ? "border-text scale-110 ring-2 ring-offset-2 ring-text" : "border-transparent"
+                    }`}
+                    style={{ backgroundColor: t.color }}
+                    title={t.label}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
           <ThemeToggleButton />
         </div>
 

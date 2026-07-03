@@ -415,6 +415,18 @@ export function IconSparkles({ size = 16, ...p }: IconProps) {
   );
 }
 
+export function IconPalette({ size = 16, ...p }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}>
+      <circle cx="13.5" cy="6.5" r="2.5" />
+      <circle cx="19" cy="11" r="2" />
+      <circle cx="6" cy="12" r="2" />
+      <circle cx="17.5" cy="18" r="2.5" />
+      <path d="M12 22C6.5 22 2 17.5 2 12S6.5 2 12 2s10 4.5 10 10" />
+    </svg>
+  );
+}
+
 export function IconSettings({ size = 20, ...p }: IconProps) {
   return (
     <svg {...base(size)} {...p}>

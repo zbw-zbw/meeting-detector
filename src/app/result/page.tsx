@@ -4,11 +4,11 @@ import Navbar from "@/components/Navbar";
 import Link from "next/link";
 import { useFadeUp } from "@/hooks/useFadeUp";
 import { useCountUp } from "@/hooks/useCountUp";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import type { AnalysisResult } from "@/types/analysis";
 import { useToast } from "@/components/ToastProvider";
 import { normalizeBreakdown } from "@/lib/history";
-import { downloadMarkdown } from "@/lib/export";
+import { downloadMarkdown, downloadCSV, downloadJSON } from "@/lib/export";
 import {
   IconArrowLeft, IconArrowRight, IconPin, IconClock, IconUsers, IconFileText,
   IconTrendingUp, IconCheckCircle, IconCheck, IconLightbulb,
@@ -140,6 +140,8 @@ export default function ResultPage() {
   const [newActionContent, setNewActionContent] = useState("");
   const [newActionAssignee, setNewActionAssignee] = useState("");
   const [newActionDeadline, setNewActionDeadline] = useState("");
+  const [showExportMenu, setShowExportMenu] = useState(false);
+  const exportDropdownRef = useRef<HTMLDivElement>(null);
 
   useFadeUp();
   const { showToast } = useToast();
@@ -182,9 +184,7 @@ export default function ResultPage() {
       )
     : [];
 
-  const displayedSentences = showAll
-    ? filteredSentences
-    : filteredSentences.slice(0, 20);
+  const displayedSentences = filteredSentences.slice(0, 20);
   const remainingCount = filteredSentences.length - 20;
 
   /* action item toggle */
@@ -280,6 +280,40 @@ export default function ResultPage() {
   const handlePrint = useCallback(() => {
     window.print();
   }, []);
+
+  /* export report as CSV */
+  const handleExportCSV = useCallback(() => {
+    if (!result) return;
+    try {
+      downloadCSV(result);
+      showToast("逐句数据已导出为 CSV", "success");
+    } catch {
+      showToast("导出失败，请重试", "error");
+    }
+  }, [result, showToast]);
+
+  /* export report as JSON */
+  const handleExportJSON = useCallback(() => {
+    if (!result) return;
+    try {
+      downloadJSON(result);
+      showToast("分析结果已导出为 JSON", "success");
+    } catch {
+      showToast("导出失败，请重试", "error");
+    }
+  }, [result, showToast]);
+
+  /* close export menu on outside click */
+  useEffect(() => {
+    if (!showExportMenu) return;
+    const handleClick = (e: MouseEvent) => {
+      if (exportDropdownRef.current && !exportDropdownRef.current.contains(e.target as Node)) {
+        setShowExportMenu(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [showExportMenu]);
 
   /* donut chart math — safe defaults if breakdown is missing */
   const RADIUS = 80;
@@ -822,17 +856,73 @@ export default function ResultPage() {
 
               {/* Show more / less */}
               {filteredSentences.length > 20 && (
-                <div className="text-center mt-4">
-                  <button
-                    onClick={() => setShowAll((v) => !v)}
-                    className="text-sm text-primary hover:underline cursor-pointer"
-                  >
-                    {showAll ? (
-                      <span className="inline-flex items-center gap-1">收起 <IconChevronUp size={14} /></span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1">展开更多 ({remainingCount} 条) <IconChevronDown size={14} /></span>
-                    )}
-                  </button>
+                <div>
+                  {/* Extra sentences with accordion animation */}
+                  <div className={`sentence-list-wrapper ${showAll ? "expanded" : ""}`}>
+                    <div className="sentence-list-inner">
+                      {filteredSentences.slice(20).map((s, i) => {
+                        const isNonsense = s.type === "nonsense";
+                        const effectiveFillWidth = `${Math.round(s.confidence * 100)}%`;
+                        const borderColor = s.type === "effective"
+                          ? "border-l-effective"
+                          : s.type === "repetitive"
+                            ? "border-l-repetitive"
+                            : "border-l-nonsense";
+                        const badgeClass = s.type === "effective"
+                          ? "bg-effective-bg text-effective"
+                          : s.type === "repetitive"
+                            ? "bg-repetitive-bg text-repetitive"
+                            : "bg-nonsense-bg text-nonsense";
+                        const typeLabel = s.type === "effective"
+                          ? "有效"
+                          : s.type === "repetitive"
+                            ? "重复"
+                            : "废话";
+                        return (
+                          <div
+                            key={20 + i}
+                            className={`sentence-card p-4 rounded-xl border-l-4 mb-3 transition-all duration-300 ${borderColor} bg-surface`}
+                          >
+                            <div className="flex items-start gap-3">
+                              <div className="flex-1 min-w-0">
+                                {s.speaker && (
+                                  <span className="text-xs font-medium text-text-muted">{s.speaker}</span>
+                                )}
+                                <p className="text-sm text-text mt-0.5">{s.text}</p>
+                              </div>
+                              <span className={`shrink-0 text-xs font-medium px-2 py-0.5 rounded-full ${badgeClass}`}>
+                                {typeLabel}
+                              </span>
+                            </div>
+                            <div className="mt-2 flex items-center gap-2">
+                              <div className="flex-1 h-1.5 rounded-full bg-border-light overflow-hidden">
+                                <div
+                                  className={`confidence-bar-fill h-full rounded-full transition-all duration-700 ease-out ${
+                                    isNonsense ? "bg-nonsense" : s.type === "repetitive" ? "bg-repetitive" : "bg-effective"
+                                  }`}
+                                  style={{ width: effectiveFillWidth }}
+                                />
+                              </div>
+                              <span className="text-xs text-text-muted shrink-0">{s.confidence}%</span>
+                              <span className="text-xs text-text-muted hidden sm:inline">{s.reason}</span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                  <div className="text-center mt-4 mb-2">
+                    <button
+                      onClick={() => setShowAll((v) => !v)}
+                      className="text-sm text-primary hover:underline cursor-pointer"
+                    >
+                      {showAll ? (
+                        <span className="inline-flex items-center gap-1">收起 <IconChevronUp size={14} /></span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1">展开更多 ({remainingCount} 条) <IconChevronDown size={14} /></span>
+                      )}
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
@@ -1168,14 +1258,39 @@ export default function ResultPage() {
               {copied ? (<><IconCheck size={16} /> 已复制</>) : (<><IconCopy size={16} /> 复制报告</>)}
             </button>
 
-            {/* Export as Markdown */}
-            <button
-              onClick={handleExport}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-surface border border-border rounded-xl text-text-secondary font-medium hover:border-primary hover:text-primary transition-all cursor-pointer"
-            >
-              <IconDownload size={16} />
-              导出报告
-            </button>
+            {/* Export Dropdown */}
+            <div className="relative" ref={exportDropdownRef}>
+              <button
+                onClick={() => setShowExportMenu((v) => !v)}
+                className="inline-flex items-center gap-2 px-6 py-3 bg-surface border border-border rounded-xl text-text-secondary font-medium hover:border-primary hover:text-primary transition-all cursor-pointer"
+              >
+                <IconDownload size={16} />
+                导出报告
+                <IconChevronDown size={14} />
+              </button>
+              {showExportMenu && (
+                <div className="absolute bottom-full mb-2 left-0 bg-surface border border-border rounded-xl shadow-lg overflow-hidden z-20 min-w-[160px] print-hide">
+                  <button
+                    onClick={() => { handleExport(); setShowExportMenu(false); }}
+                    className="w-full px-4 py-2.5 text-sm text-left text-text hover:bg-bg transition-colors flex items-center gap-2"
+                  >
+                    <IconFileText size={14} className="text-text-muted" /> Markdown
+                  </button>
+                  <button
+                    onClick={() => { handleExportCSV(); setShowExportMenu(false); }}
+                    className="w-full px-4 py-2.5 text-sm text-left text-text hover:bg-bg transition-colors flex items-center gap-2"
+                  >
+                    <IconLayers size={14} className="text-text-muted" /> CSV 逐句数据
+                  </button>
+                  <button
+                    onClick={() => { handleExportJSON(); setShowExportMenu(false); }}
+                    className="w-full px-4 py-2.5 text-sm text-left text-text hover:bg-bg transition-colors flex items-center gap-2"
+                  >
+                    <IconBook size={14} className="text-text-muted" /> JSON 结构化数据
+                  </button>
+                </div>
+              )}
+            </div>
 
             {/* Print Report */}
             <button

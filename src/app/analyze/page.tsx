@@ -438,15 +438,30 @@ export default function AnalyzePage() {
             ))}
           </div>
 
-          {/* Hint / Clear Feedback */}
+          {/* Hint / Clear Feedback / Smart Tips */}
           <div className="mt-3 fade-up">
             {clearedFeedback ? (
               <p className="text-sm text-primary flex items-center gap-1.5 clear-feedback-enter">
                 <IconCheckCircle size={14} className="text-primary" /> 已清空，可重新粘贴内容
               </p>
-            ) : charCount > 0 && charCount < 200 ? (
+            ) : charCount > 0 && charCount < 10 ? (
+              <p className="text-sm text-nonsense flex items-center gap-1.5">
+                <IconAlert size={14} className="text-nonsense" /> 至少需要 10 字才能开始分析
+              </p>
+            ) : charCount >= 10 && charCount < 200 ? (
+              <div className="space-y-1">
+                <p className="text-sm text-repetitive flex items-center gap-1.5">
+                  <IconAlert size={14} className="text-repetitive" /> 内容较短，分析结果可能不够准确
+                </p>
+                <p className="text-xs text-text-muted">
+                  {text.includes("会议") || text.includes("讨论")
+                    ? "建议包含至少 3 位发言人的对话以获得更准确的发言人分析"
+                    : "建议粘贴会议记录格式的文本，包含发言人标注效果更佳"}
+                </p>
+              </div>
+            ) : charCount >= 200 && !/[一-龥\u4e00-\u9fff]/.test(text) ? (
               <p className="text-sm text-repetitive flex items-center gap-1.5">
-                <IconAlert size={14} className="text-repetitive" /> 内容较短，分析结果可能不够准确
+                <IconAlert size={14} className="text-repetitive" /> 检测到非中文文本，当前模型对中文会议分析更准确
               </p>
             ) : (
               <p className="text-sm text-text-muted">

@@ -126,6 +126,46 @@ body {
   animation: ringDraw 1.5s ease forwards;
 }
 
+/* ========== Custom Theme Colors ========== */
+[data-theme="purple"] {
+  --primary: #8b5cf6;
+  --primary-light: #a78bfa;
+  --primary-dark: #7c3aed;
+}
+[data-theme="purple"] .bg-primary { background-color: #8b5cf6 !important; }
+[data-theme="purple"] .text-primary { color: #8b5cf6 !important; }
+[data-theme="purple"] .border-primary { border-color: #8b5cf6 !important; }
+[data-theme="purple"] .ring-primary\/20 { --tw-ring-color: rgb(139 92 246 / 0.2) !important; }
+[data-theme="purple"] .focus\:ring-primary\/20:focus { --tw-ring-color: rgb(139 92 246 / 0.2) !important; }
+[data-theme="purple"] .hover\:bg-primary:hover { background-color: #7c3aed !important; }
+[data-theme="purple"] .cta-btn:hover { --tw-shadow-color: rgb(139 92 246 / 0.4) !important; }
+
+[data-theme="green"] {
+  --primary: #059669;
+  --primary-light: #10b981;
+  --primary-dark: #047857;
+}
+[data-theme="green"] .bg-primary { background-color: #059669 !important; }
+[data-theme="green"] .text-primary { color: #059669 !important; }
+[data-theme="green"] .border-primary { border-color: #059669 !important; }
+[data-theme="green"] .ring-primary\/20 { --tw-ring-color: rgb(5 150 105 / 0.2) !important; }
+[data-theme="green"] .focus\:ring-primary\/20:focus { --tw-ring-color: rgb(5 150 105 / 0.2) !important; }
+[data-theme="green"] .hover\:bg-primary:hover { background-color: #047857 !important; }
+[data-theme="green"] .cta-btn:hover { --tw-shadow-color: rgb(5 150 105 / 0.4) !important; }
+
+[data-theme="orange"] {
+  --primary: #ea580c;
+  --primary-light: #f97316;
+  --primary-dark: #c2410c;
+}
+[data-theme="orange"] .bg-primary { background-color: #ea580c !important; }
+[data-theme="orange"] .text-primary { color: #ea580c !important; }
+[data-theme="orange"] .border-primary { border-color: #ea580c !important; }
+[data-theme="orange"] .ring-primary\/20 { --tw-ring-color: rgb(234 88 12 / 0.2) !important; }
+[data-theme="orange"] .focus\:ring-primary\/20:focus { --tw-ring-color: rgb(234 88 12 / 0.2) !important; }
+[data-theme="orange"] .hover\:bg-primary:hover { background-color: #c2410c !important; }
+[data-theme="orange"] .cta-btn:hover { --tw-shadow-color: rgb(234 88 12 / 0.4) !important; }
+
 /* ========== Reduced Motion ========== */
 @media (prefers-reduced-motion: reduce) {
   .fade-up {
@@ -317,8 +357,105 @@ body {
   z-index: 1;
 }
 
+/* ========== Accordion Expand ========== */
+.sentence-list-wrapper {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.4s ease-out;
+}
+.sentence-list-wrapper.expanded {
+  grid-template-rows: 1fr;
+}
+.sentence-list-inner {
+  overflow: hidden;
+}
+
 /* ========== Focus ========== */
 *:focus-visible {
   outline: 2px solid var(--primary);
   outline-offset: 2px;
+}
+
+/* ========== Print Styles ========== */
+@media print {
+  /* Hide non-content elements */
+  nav, footer, .print-hide {
+    display: none !important;
+  }
+
+  /* Reset layout for paper */
+  body {
+    background: white !important;
+    color: black !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    font-size: 12pt;
+  }
+
+  main {
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+  }
+
+  /* Full width content */
+  .max-w-\[960px\] {
+    max-width: 100% !important;
+    padding: 0 !important;
+  }
+
+  /* Make cards border-only (no shadow, no background effects) */
+  .bg-surface {
+    background: white !important;
+    box-shadow: none !important;
+    border: 1px solid #ddd !important;
+    break-inside: avoid;
+  }
+
+  /* Ensure text colors are readable on white */
+  .text-text {
+    color: #111 !important;
+  }
+  .text-text-secondary {
+    color: #555 !important;
+  }
+  .text-text-muted {
+    color: #888 !important;
+  }
+  .text-effective, .text-primary {
+    color: #059669 !important;
+  }
+  .text-nonsense {
+    color: #dc2626 !important;
+  }
+  .text-repetitive {
+    color: #d97706 !important;
+  }
+
+  /* Hide animations and transitions */
+  .fade-up {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  .score-pulse::after,
+  .score-flash::before,
+  .hero-mockup-glow::after {
+    display: none !important;
+  }
+
+  /* Make action items checkboxes visible */
+  button[aria-label="标记完成"]::before {
+    content: "";
+    width: 16px;
+    height: 16px;
+    border: 1px solid #999;
+    border-radius: 4px;
+    display: inline-block;
+    vertical-align: middle;
+    margin-right: 8px;
+  }
+
+  /* Page breaks between major sections */
+  .mb-6 {
+    break-inside: avoid;
+  }
 }
