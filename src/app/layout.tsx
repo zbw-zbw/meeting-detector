@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { ToastProvider } from "@/components/ToastProvider";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import PageTransition from "@/components/PageTransition";
+import KeyboardShortcuts from "@/components/KeyboardShortcuts";
 
 export const metadata: Metadata = {
   title: "会议废话检测器 - AI 会议效率分析工具",
@@ -47,7 +49,10 @@ export default function RootLayout({
       </head>
       <body className="min-h-screen flex flex-col">
         <ThemeProvider>
-          <ToastProvider>{children}</ToastProvider>
+          <ToastProvider>
+            <KeyboardShortcuts />
+            <PageTransition>{children}</PageTransition>
+          </ToastProvider>
         </ThemeProvider>
       </body>
     </html>

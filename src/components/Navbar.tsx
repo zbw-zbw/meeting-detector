@@ -3,13 +3,14 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
-import { IconChart, IconSun, IconMoon, IconPalette } from "@/components/Icon";
+import { IconChart, IconSun, IconMoon, IconPalette, IconSettings } from "@/components/Icon";
 import { useTheme } from "@/components/ThemeProvider";
 
 const navItems = [
   { label: "首页", href: "/" },
   { label: "开始分析", href: "/analyze", isPrimary: true },
   { label: "历史记录", href: "/history" },
+  { label: "设置", href: "/settings" },
 ];
 
 /** Reusable theme toggle button (sun/moon). */
@@ -25,6 +26,42 @@ function ThemeToggleButton() {
     >
       {isDark ? <IconSun size={20} /> : <IconMoon size={20} />}
     </button>
+  );
+}
+
+/** Theme color dot buttons for reuse in desktop and mobile. */
+function ThemeColorDots({
+  currentTheme,
+  onThemeChange,
+  size = "sm",
+}: {
+  currentTheme: string;
+  onThemeChange: (key: string) => void;
+  size?: "sm" | "lg";
+}) {
+  const dotSize = size === "sm" ? "w-7 h-7" : "w-8 h-8";
+  return (
+    <>
+      {[
+        { key: "", label: "蓝", color: "#2563eb" },
+        { key: "purple", label: "紫", color: "#8b5cf6" },
+        { key: "green", label: "绿", color: "#059669" },
+        { key: "orange", label: "橙", color: "#ea580c" },
+      ].map((t) => (
+        <button
+          key={t.key}
+          onClick={() => onThemeChange(t.key)}
+          className={`${dotSize} rounded-full border-2 transition-all hover:scale-110 ${
+            currentTheme === t.key
+              ? "border-text scale-110 ring-2 ring-offset-2 ring-text"
+              : "border-transparent"
+          }`}
+          style={{ backgroundColor: t.color }}
+          title={t.label}
+          aria-label={`切换到${t.label}色主题`}
+        />
+      ))}
+    </>
   );
 }
 
@@ -63,6 +100,18 @@ export default function Navbar() {
     return () => document.removeEventListener("mousedown", handleClick);
   }, [showThemePicker]);
 
+  const handleThemeChange = (key: string) => {
+    if (key) {
+      document.documentElement.setAttribute("data-theme", key);
+      localStorage.setItem("themeColor", key);
+    } else {
+      document.documentElement.removeAttribute("data-theme");
+      localStorage.removeItem("themeColor");
+    }
+    setCurrentTheme(key);
+    setShowThemePicker(false);
+  };
+
   return (
     <header
       className={`fixed top-0 left-0 right-0 z-50 bg-surface/80 backdrop-blur-md border-b border-border transition-shadow duration-300 ${
@@ -76,7 +125,8 @@ export default function Navbar() {
           className="flex items-center gap-2 font-bold text-text text-lg shrink-0"
         >
           <IconChart size={24} className="text-primary" />
-          <span>会议废话检测器</span>
+          <span className="hidden sm:inline">会议废话检测器</span>
+          <span className="sm:hidden">废话检测</span>
         </Link>
 
         {/* Desktop Nav */}
@@ -109,6 +159,7 @@ export default function Navbar() {
                       : "text-text-secondary hover:text-text hover:bg-surface"
                   }`}
                 >
+                  {item.label === "设置" && <IconSettings size={14} className="inline mr-1 -mt-0.5" />}
                   {item.label}
                   {isActive && (
                     <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-primary rounded-full" />
@@ -132,32 +183,7 @@ export default function Navbar() {
             </button>
             {showThemePicker && (
               <div className="absolute right-0 top-full mt-2 bg-surface border border-border rounded-xl shadow-lg p-2 z-50 flex gap-1.5">
-                {[
-                  { key: "", label: "蓝", color: "#2563eb" },
-                  { key: "purple", label: "紫", color: "#8b5cf6" },
-                  { key: "green", label: "绿", color: "#059669" },
-                  { key: "orange", label: "橙", color: "#ea580c" },
-                ].map((t) => (
-                  <button
-                    key={t.key}
-                    onClick={() => {
-                      if (t.key) {
-                        document.documentElement.setAttribute("data-theme", t.key);
-                        localStorage.setItem("themeColor", t.key);
-                      } else {
-                        document.documentElement.removeAttribute("data-theme");
-                        localStorage.removeItem("themeColor");
-                      }
-                      setCurrentTheme(t.key);
-                      setShowThemePicker(false);
-                    }}
-                    className={`w-8 h-8 rounded-full border-2 transition-all hover:scale-110 ${
-                      currentTheme === t.key ? "border-text scale-110 ring-2 ring-offset-2 ring-text" : "border-transparent"
-                    }`}
-                    style={{ backgroundColor: t.color }}
-                    title={t.label}
-                  />
-                ))}
+                <ThemeColorDots currentTheme={currentTheme} onThemeChange={handleThemeChange} size="lg" />
               </div>
             )}
           </div>
@@ -229,15 +255,22 @@ export default function Navbar() {
                         : "text-text-secondary hover:text-text hover:bg-surface"
                     }`}
                   >
+                    {item.label === "设置" && <IconSettings size={14} className="inline mr-1 -mt-0.5" />}
                     {item.label}
                   </Link>
                 </li>
               );
             })}
           </ul>
-          {/* Mobile Theme Toggle */}
-          <div className="mt-2 pt-3 border-t border-border-light flex items-center">
-            <ThemeToggleButton />
+          {/* Mobile Theme Toggle + Theme Color Dots */}
+          <div className="mt-2 pt-3 border-t border-border-light">
+            <div className="flex items-center gap-2">
+              <ThemeToggleButton />
+              <div className="w-px h-5 bg-border" />
+              <div className="flex items-center gap-1.5">
+                <ThemeColorDots currentTheme={currentTheme} onThemeChange={handleThemeChange} size="sm" />
+              </div>
+            </div>
           </div>
         </div>
       )}

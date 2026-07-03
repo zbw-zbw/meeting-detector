@@ -90,10 +90,10 @@ const EXAMPLES: Record<string, string> = {
 小王：暗黑模式先放着，不着急。`,
 };
 
-const exampleLabels: { key: string; label: string; icon: React.ReactNode }[] = [
-  { key: "planning", label: "Q3产品规划会", icon: <IconClipboard size={14} /> },
-  { key: "weekly", label: "周会同步", icon: <IconCalendar size={14} /> },
-  { key: "brainstorm", label: "头脑风暴会", icon: <IconLightbulb size={14} /> },
+const exampleLabels: { key: string; label: string; icon: React.ReactNode; colorClass: string; dotColorClass: string }[] = [
+  { key: "planning", label: "Q3产品规划会", icon: <IconClipboard size={14} />, colorClass: "hover:border-primary hover:text-primary hover:bg-primary/5", dotColorClass: "bg-primary" },
+  { key: "weekly", label: "周会同步", icon: <IconCalendar size={14} />, colorClass: "hover:border-effective hover:text-effective hover:bg-effective/5", dotColorClass: "bg-effective" },
+  { key: "brainstorm", label: "头脑风暴会", icon: <IconLightbulb size={14} />, colorClass: "hover:border-repetitive hover:text-repetitive hover:bg-repetitive/5", dotColorClass: "bg-repetitive" },
 ];
 
 // 加载步骤
@@ -292,7 +292,8 @@ export default function AnalyzePage() {
             <h1 className="text-3xl sm:text-4xl font-extrabold text-text">
               粘贴你的会议内容
             </h1>
-            <p className="text-text-secondary mt-3 text-lg">
+            <div className="mt-3 mb-3 h-px w-20 bg-gradient-to-r from-primary via-primary-light to-transparent rounded-full" />
+            <p className="text-text-secondary text-lg">
               支持会议纪要、文字记录、聊天记录等任意格式
             </p>
           </div>
@@ -398,7 +399,7 @@ export default function AnalyzePage() {
 
           {/* Toolbar */}
           <div className="mt-3 flex items-center justify-between fade-up">
-            <div className="flex items-center gap-2">
+            <div className="inline-flex items-center gap-1 bg-surface border border-border rounded-xl p-1">
               <button
                 onClick={handlePasteFromClipboard}
                 disabled={loading}
@@ -406,6 +407,7 @@ export default function AnalyzePage() {
               >
                 <IconClipboard size={14} /> 粘贴
               </button>
+              <div className="w-px h-4 bg-border mx-0.5" />
               {text.length > 0 && (
                 <button
                   onClick={handleClear}
@@ -431,9 +433,12 @@ export default function AnalyzePage() {
                 key={ex.key}
                 onClick={() => fillExample(ex.key)}
                 disabled={loading}
-                className="inline-flex items-center gap-1.5 px-4 py-2 bg-surface border border-border rounded-xl text-sm text-text-secondary hover:border-primary hover:text-primary transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                className={`inline-flex items-center gap-2 px-4 py-2 bg-surface border border-border rounded-xl text-sm text-text-secondary transition-all disabled:opacity-50 disabled:cursor-not-allowed ${ex.colorClass}`}
               >
-                <span className="flex items-center gap-1.5">{ex.icon}{ex.label}</span>
+                <span className="flex items-center gap-1.5">
+                  <span className={`w-2 h-2 rounded-full ${ex.dotColorClass}`} />
+                  {ex.label}
+                </span>
               </button>
             ))}
           </div>
@@ -479,7 +484,7 @@ export default function AnalyzePage() {
                 loading
                   ? "bg-primary/60 text-white cursor-wait"
                   : canAnalyze
-                    ? "bg-primary text-white cta-btn hover:bg-primary-light"
+                    ? "bg-primary text-white cta-btn hover:bg-primary-light analyze-btn-ready"
                     : "bg-border text-text-muted cursor-not-allowed"
               }`}
             >
