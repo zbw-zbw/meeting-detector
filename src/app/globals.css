@@ -188,6 +188,102 @@ body {
 [data-theme="orange"] .hover\:bg-primary-light:hover { background-color: #f97316 !important; }
 [data-theme="orange"] .cta-btn:hover { box-shadow: 0 8px 24px rgba(234, 88, 12, 0.3) !important; }
 
+/* ========== Hero Stagger Bar Fill ========== */
+@keyframes barFill {
+  from { width: 0; }
+}
+.hero-stagger-bar {
+  animation: barFill 1s ease-out both;
+}
+.hero-stagger-bar:nth-child(1) { animation-delay: 0.5s; }
+.hero-stagger-bar:nth-child(2) { animation-delay: 0.7s; }
+.hero-stagger-bar:nth-child(3) { animation-delay: 0.9s; }
+
+/* ========== Hero Background Glow ========== */
+.hero-glow {
+  position: relative;
+}
+.hero-glow::before {
+  content: "";
+  position: absolute;
+  top: -20%;
+  right: -10%;
+  width: 50%;
+  height: 80%;
+  background: radial-gradient(ellipse, var(--primary) 0%, transparent 70%);
+  opacity: 0.04;
+  pointer-events: none;
+  z-index: 0;
+}
+.dark .hero-glow::before {
+  opacity: 0.06;
+}
+
+/* ========== Hero Nonsense Highlight ========== */
+.hero-nonsense-word {
+  position: relative;
+  display: inline-block;
+  color: var(--nonsense);
+}
+.hero-nonsense-word::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: -4px;
+  right: -4px;
+  height: 35%;
+  background: var(--nonsense-bg);
+  border-radius: 2px;
+  z-index: -1;
+  transform: rotate(-0.5deg);
+}
+
+/* ========== Pain Point Card Hover ========== */
+.pain-card {
+  transition: border-color 0.25s ease, transform 0.2s ease;
+  border-left: 3px solid transparent;
+}
+.pain-card:hover {
+  border-left-color: var(--primary);
+  transform: translateX(2px);
+}
+.pain-card-featured:hover {
+  border-left-color: var(--nonsense);
+}
+
+/* ========== Steps Line Draw Animation ========== */
+@keyframes lineDraw {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+.steps-line-animated {
+  transform-origin: left;
+  animation: lineDraw 0.8s ease-out 0.3s both;
+}
+
+/* ========== Steps Node Pulse ========== */
+@keyframes nodePulse {
+  0%, 100% { box-shadow: 0 0 0 0 var(--primary-shadow, rgba(37, 99, 235, 0.3)); }
+  50% { box-shadow: 0 0 0 8px transparent; }
+}
+.step-node:hover {
+  animation: nodePulse 1.2s ease-in-out infinite;
+}
+
+/* ========== CTA Grid Background ========== */
+.cta-grid-bg {
+  background-image:
+    linear-gradient(var(--border-light) 1px, transparent 1px),
+    linear-gradient(90deg, var(--border-light) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+.cta-grid-bg-dark {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
 /* ========== Reduced Motion ========== */
 @media (prefers-reduced-motion: reduce) {
   .fade-up {
@@ -215,6 +311,19 @@ body {
     opacity: 1;
     transform: none;
   }
+  .hero-stagger-bar {
+    animation: none;
+  }
+  .hero-glow::before {
+    display: none;
+  }
+  .steps-line-animated {
+    animation: none;
+    transform: scaleX(1);
+  }
+  .step-node:hover {
+    animation: none;
+  }
   .analyze-btn-ready {
     animation: none;
   }
@@ -222,6 +331,26 @@ body {
     animation: none;
     opacity: 1;
     transform: none;
+  }
+  .sentence-list-stagger .sentence-card {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+  .score-card-hover:hover {
+    transform: none;
+  }
+  .score-bar-animated {
+    animation: none;
+    transform: scaleX(1);
+  }
+  .drag-active-border {
+    animation: none;
+  }
+  .checkmark-circle,
+  .checkmark-check {
+    animation: none;
+    stroke-dashoffset: 0;
   }
   * {
     transition-duration: 0.01ms !important;
@@ -422,6 +551,74 @@ body {
 }
 .sentence-list-inner {
   overflow: hidden;
+}
+
+/* ========== Sentence Card Stagger Enter (SentenceList only) ========== */
+.sentence-list-stagger .sentence-card {
+  animation: sentenceCardEnter 0.3s ease-out both;
+}
+.sentence-list-stagger .sentence-card:nth-child(1) { animation-delay: 0.05s; }
+.sentence-list-stagger .sentence-card:nth-child(2) { animation-delay: 0.1s; }
+.sentence-list-stagger .sentence-card:nth-child(3) { animation-delay: 0.15s; }
+.sentence-list-stagger .sentence-card:nth-child(4) { animation-delay: 0.2s; }
+.sentence-list-stagger .sentence-card:nth-child(5) { animation-delay: 0.25s; }
+@keyframes sentenceCardEnter {
+  from { opacity: 0; transform: translateX(-8px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+/* ========== Score Card Hover Lift ========== */
+.score-card-hover {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.score-card-hover:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+/* ========== Score Bar Expand Animation ========== */
+@keyframes barExpand {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+.score-bar-animated {
+  transform-origin: left;
+  animation: barExpand 0.6s ease-out 0.2s both;
+}
+
+/* ========== Marching Ants (Drag Active Border) ========== */
+@keyframes marchingAnts {
+  0% { background-position: 0 0, 100% 0; }
+  100% { background-position: 20px 0, 120px 0; }
+}
+.drag-active-border {
+  border: 2px dashed var(--primary);
+  background-image: repeating-linear-gradient(90deg, var(--primary) 0, var(--primary) 10px, transparent 10px, transparent 20px);
+  background-size: 20px 2px, 20px 2px;
+  background-position: 0 0, 100% 0;
+  background-repeat: no-repeat;
+  animation: marchingAnts 0.5s linear infinite;
+  border-image: none;
+}
+
+/* ========== Checkmark Draw Animation ========== */
+@keyframes checkmarkCircle {
+  from { stroke-dashoffset: 166; }
+  to { stroke-dashoffset: 0; }
+}
+@keyframes checkmarkCheck {
+  from { stroke-dashoffset: 48; }
+  to { stroke-dashoffset: 0; }
+}
+.checkmark-circle {
+  stroke-dasharray: 166;
+  stroke-dashoffset: 166;
+  animation: checkmarkCircle 0.4s ease-out forwards;
+}
+.checkmark-check {
+  stroke-dasharray: 48;
+  stroke-dashoffset: 48;
+  animation: checkmarkCheck 0.3s ease-out 0.3s forwards;
 }
 
 /* ========== Focus ========== */

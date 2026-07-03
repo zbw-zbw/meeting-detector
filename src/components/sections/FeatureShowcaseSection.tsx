@@ -5,6 +5,16 @@ import { IconDot, IconCheckCircle, IconLightbulb } from "@/components/Icon";
 export default function FeatureShowcaseSection() {
   return (
     <section className="py-24 border-t border-border-light" id="features">
+      <style>{`
+        @keyframes featureStagger {
+          from { opacity: 0; transform: translateY(12px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .stagger-item {
+          opacity: 0;
+          animation: featureStagger 0.5s ease-out forwards;
+        }
+      `}</style>
       <div className="max-w-[1200px] mx-auto px-4 sm:px-6 fade-up">
         {/* Section header */}
         <div className="mb-16">
@@ -32,7 +42,7 @@ export default function FeatureShowcaseSection() {
               <div className="grid grid-cols-1 md:grid-cols-5">
                 {/* Sentences */}
                 <div className="md:col-span-3 p-5 space-y-3.5 md:border-r md:border-border-light">
-                  <div className="flex items-start gap-2.5">
+                  <div className="flex items-start gap-2.5 stagger-item" style={{ animationDelay: "0.1s" }}>
                     <span className="flex items-center shrink-0 pt-1">
                       <IconDot size={9} className="text-effective" />
                     </span>
@@ -43,7 +53,7 @@ export default function FeatureShowcaseSection() {
                       有效信息
                     </span>
                   </div>
-                  <div className="flex items-start gap-2.5">
+                  <div className="flex items-start gap-2.5 stagger-item" style={{ animationDelay: "0.25s" }}>
                     <span className="flex items-center shrink-0 pt-1">
                       <IconDot size={9} className="text-nonsense" />
                     </span>
@@ -54,7 +64,7 @@ export default function FeatureShowcaseSection() {
                       废话 92%
                     </span>
                   </div>
-                  <div className="flex items-start gap-2.5">
+                  <div className="flex items-start gap-2.5 stagger-item" style={{ animationDelay: "0.4s" }}>
                     <span className="flex items-center shrink-0 pt-1">
                       <IconDot size={9} className="text-repetitive" />
                     </span>
@@ -150,8 +160,8 @@ export default function FeatureShowcaseSection() {
               </p>
               <div className="space-y-2.5">
                 <div
-                  className="flex items-center gap-3 bg-bg rounded-lg p-3"
-                  style={{ borderLeft: "4px solid var(--primary)" }}
+                  className="flex items-center gap-3 bg-bg rounded-lg p-3 stagger-item"
+                  style={{ borderLeft: "4px solid var(--primary)", animationDelay: "0.1s" }}
                 >
                   <IconCheckCircle size={15} className="text-primary shrink-0" />
                   <span className="text-sm text-text">
@@ -159,8 +169,8 @@ export default function FeatureShowcaseSection() {
                   </span>
                 </div>
                 <div
-                  className="flex items-center gap-3 bg-bg rounded-lg p-3"
-                  style={{ borderLeft: "4px solid var(--primary)" }}
+                  className="flex items-center gap-3 bg-bg rounded-lg p-3 stagger-item"
+                  style={{ borderLeft: "4px solid var(--primary)", animationDelay: "0.25s" }}
                 >
                   <IconCheckCircle size={15} className="text-primary shrink-0" />
                   <span className="text-sm text-text">
@@ -168,8 +178,8 @@ export default function FeatureShowcaseSection() {
                   </span>
                 </div>
                 <div
-                  className="flex items-center gap-3 bg-bg rounded-lg p-3"
-                  style={{ borderLeft: "4px solid var(--primary)" }}
+                  className="flex items-center gap-3 bg-bg rounded-lg p-3 stagger-item"
+                  style={{ borderLeft: "4px solid var(--primary)", animationDelay: "0.4s" }}
                 >
                   <IconCheckCircle size={15} className="text-primary shrink-0" />
                   <span className="text-sm text-text">
@@ -192,6 +202,51 @@ export default function FeatureShowcaseSection() {
                 还会基于分析结果给出会议改进建议，帮助团队持续提升效率。
               </span>
             </p>
+          </div>
+        </div>
+
+        {/* Feature 3: Report Comparison & Trends */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center mt-20 fade-up">
+          <div className="lg:col-span-5">
+            <h3 className="text-2xl font-bold text-text">对比分析，持续改进</h3>
+            <p className="text-text-secondary mt-3 leading-relaxed">
+              多场会议并排对比，发现效率变化趋势。用数据驱动团队会议文化改善。
+            </p>
+          </div>
+          <div className="lg:col-span-7">
+            {/* Mini comparison mockup */}
+            <div className="bg-surface border border-border rounded-2xl p-5">
+              <div className="grid grid-cols-2 gap-4">
+                {/* Meeting 1 */}
+                <div className="text-center p-4 bg-bg rounded-xl stagger-item" style={{ animationDelay: "0.1s" }}>
+                  <p className="text-xs text-text-muted">周会 #12</p>
+                  <p className="text-3xl font-bold text-nonsense mt-1">43</p>
+                  <div className="flex gap-1 justify-center mt-2">
+                    <div className="h-1.5 rounded-full bg-effective" style={{width: "42%"}} />
+                    <div className="h-1.5 rounded-full bg-repetitive" style={{width: "28%"}} />
+                    <div className="h-1.5 rounded-full bg-nonsense" style={{width: "30%"}} />
+                  </div>
+                </div>
+                {/* Meeting 2 */}
+                <div className="text-center p-4 bg-bg rounded-xl stagger-item" style={{ animationDelay: "0.25s" }}>
+                  <p className="text-xs text-text-muted">周会 #15</p>
+                  <p className="text-3xl font-bold text-effective mt-1">78</p>
+                  <div className="flex gap-1 justify-center mt-2">
+                    <div className="h-1.5 rounded-full bg-effective" style={{width: "68%"}} />
+                    <div className="h-1.5 rounded-full bg-repetitive" style={{width: "18%"}} />
+                    <div className="h-1.5 rounded-full bg-nonsense" style={{width: "14%"}} />
+                  </div>
+                </div>
+              </div>
+              {/* Trend arrow */}
+              <div className="flex items-center justify-center gap-2 mt-4 stagger-item" style={{ animationDelay: "0.4s" }}>
+                <span className="text-effective font-bold flex items-center gap-1">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15" /></svg>
+                  +35分
+                </span>
+                <span className="text-xs text-text-muted">效率提升 81%</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>

@@ -315,7 +315,7 @@ export default function AnalyzePage() {
               className="w-full min-h-[300px] sm:min-h-[400px] bg-surface rounded-2xl border border-border p-5 sm:p-6 text-text text-base leading-relaxed resize-y placeholder:text-text-muted textarea-glow focus:border-primary transition-all outline-none disabled:opacity-60 disabled:cursor-not-allowed"
             />
             {isDragging && (
-              <div className="absolute inset-0 bg-primary/10 backdrop-blur-sm rounded-2xl border-2 border-dashed border-primary flex items-center justify-center z-20 pointer-events-none">
+              <div className="absolute inset-0 bg-primary/10 backdrop-blur-sm rounded-2xl drag-active-border flex items-center justify-center z-20 pointer-events-none">
                 <div className="text-center">
                   <div className="mb-2 text-primary">
                     <IconFileText size={28} />
@@ -329,8 +329,33 @@ export default function AnalyzePage() {
             {/* Loading Overlay */}
             {loading && (
               <div className="absolute inset-0 bg-surface/90 backdrop-blur-sm rounded-2xl flex flex-col items-center justify-center gap-8 z-10">
-                {/* Step Indicator */}
-                <div className="flex items-center gap-0 w-full max-w-xs px-6">
+                {/* Completion checkmark animation */}
+                {completedStep === 2 && (
+                  <div className="flex flex-col items-center gap-3">
+                    <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+                      <circle
+                        cx="32" cy="32" r="28"
+                        stroke="var(--color-effective)"
+                        strokeWidth="3"
+                        className="checkmark-circle"
+                      />
+                      <path
+                        d="M20 32l8 8 16-16"
+                        stroke="var(--color-effective)"
+                        strokeWidth="3"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="checkmark-check"
+                      />
+                    </svg>
+                    <p className="text-sm font-medium text-effective">分析完成</p>
+                  </div>
+                )}
+
+                {/* Step Indicator (hidden after completion) */}
+                {completedStep < 2 && (
+                  <>
+                    <div className="flex items-center gap-0 w-full max-w-xs px-6">
                   {LOADING_STEPS.map((step, i) => {
                     const done = completedStep >= i;
                     const active = i === completedStep + 1 || (completedStep === -1 && i === 0);
@@ -393,6 +418,8 @@ export default function AnalyzePage() {
                 <p className="text-xs text-text-muted mt-2">
                   分析通常需要 10-30 秒
                 </p>
+                  </>
+                )}
               </div>
             )}
           </div>
@@ -406,6 +433,7 @@ export default function AnalyzePage() {
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-text-secondary hover:text-primary hover:bg-primary/5 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <IconClipboard size={14} /> 粘贴
+                <kbd className="px-1 py-0.5 rounded bg-bg border border-border text-text-muted text-[10px] font-mono leading-none">Ctrl+V</kbd>
               </button>
               <div className="w-px h-4 bg-border mx-0.5" />
               {text.length > 0 && (
@@ -418,9 +446,29 @@ export default function AnalyzePage() {
                 </button>
               )}
             </div>
-            <span className={`text-sm transition-colors ${charCount > 0 ? "text-text-secondary" : "text-text-muted"}`}>
-              {charCount} 字
-            </span>
+            <div className="flex items-center gap-3">
+              <span className={`text-sm transition-colors ${charCount > 0 ? "text-text-secondary" : "text-text-muted"}`}>
+                {charCount} 字
+              </span>
+              {charCount > 200 && (
+                <div className="flex items-center gap-1.5">
+                  <div className="w-20 h-1.5 rounded-full bg-border-light overflow-hidden">
+                    <div
+                      className="h-full rounded-full transition-all duration-500 ease-out"
+                      style={{
+                        width: `${Math.min(100, (charCount / 500) * 100)}%`,
+                        backgroundColor: charCount < 10
+                          ? "var(--nonsense)"
+                          : charCount < 200
+                            ? "var(--repetitive)"
+                            : "var(--effective)",
+                      }}
+                    />
+                  </div>
+                  <span className="text-xs text-effective">内容充足</span>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Example Buttons */}

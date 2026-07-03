@@ -14,7 +14,7 @@ import {
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
-import { IconBook, IconTrash, IconInbox, IconArrowRight, IconSearch, IconX, IconTrendingUp, IconChart } from "@/components/Icon";
+import { IconBook, IconTrash, IconInbox, IconArrowRight, IconSearch, IconX, IconTrendingUp, IconChart, IconDownload, IconClipboard, IconZap, IconAlert, IconCheck } from "@/components/Icon";
 
 export default function HistoryPage() {
   useFadeUp();
@@ -50,8 +50,15 @@ export default function HistoryPage() {
     (sum, item) => sum + item.actionItemCount,
     0
   );
+  const maxScore =
+    history.length > 0 ? Math.max(...history.map((item) => item.score)) : "—";
   const minScore =
     history.length > 0 ? Math.min(...history.map((item) => item.score)) : "—";
+
+  // Trend: compare last item with second-to-last
+  const lastScore = history.length >= 2 ? history[0].score : null;
+  const prevScore = history.length >= 2 ? history[1].score : null;
+  const scoreTrend = lastScore !== null && prevScore !== null ? lastScore - prevScore : null;
 
   // Filter history
   const filteredHistory = history.filter((item) => {
@@ -137,7 +144,10 @@ export default function HistoryPage() {
               {/* Stats Overview Card */}
               <div className="bg-primary/5 rounded-2xl p-6 mb-6 fade-up border border-primary/10">
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                  <div className="text-center">
+                  <div className="text-center bg-surface/50 rounded-xl p-3">
+                    <div className="flex items-center justify-center gap-1.5 text-primary mb-1">
+                      <IconClipboard size={14} />
+                    </div>
                     <div className="text-2xl font-bold text-primary">
                       {history.length}
                     </div>
@@ -145,15 +155,31 @@ export default function HistoryPage() {
                       分析总次数
                     </div>
                   </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-primary">
+                  <div className="text-center bg-surface/50 rounded-xl p-3">
+                    <div className="flex items-center justify-center gap-1.5 text-primary mb-1">
+                      <IconZap size={14} />
+                    </div>
+                    <div className="text-2xl font-bold text-primary flex items-center justify-center gap-1">
                       {avgScore}
+                      {scoreTrend !== null && (
+                        <span className={`text-xs font-medium ${scoreTrend >= 0 ? "text-effective" : "text-nonsense"} flex items-center`}>
+                          {scoreTrend >= 0 ? (
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15" /></svg>
+                          ) : (
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9" /></svg>
+                          )}
+                          {Math.abs(scoreTrend)}
+                        </span>
+                      )}
                     </div>
                     <div className="text-xs text-text-secondary mt-1">
                       平均效率分
                     </div>
                   </div>
-                  <div className="text-center">
+                  <div className="text-center bg-surface/50 rounded-xl p-3">
+                    <div className="flex items-center justify-center gap-1.5 text-primary mb-1">
+                      <IconCheck size={14} />
+                    </div>
                     <div className="text-2xl font-bold text-primary">
                       {totalActionItems}
                     </div>
@@ -161,7 +187,10 @@ export default function HistoryPage() {
                       行动项总计
                     </div>
                   </div>
-                  <div className="text-center">
+                  <div className="text-center bg-surface/50 rounded-xl p-3">
+                    <div className="flex items-center justify-center gap-1.5 text-primary mb-1">
+                      <IconAlert size={14} />
+                    </div>
                     <div className="text-2xl font-bold text-primary">
                       {minScore}
                     </div>
@@ -176,16 +205,18 @@ export default function HistoryPage() {
               {history.length >= 2 && (() => {
                 const recentHistory = history.slice(0, 10).reverse(); // last 10, chronological
                 const chartW = 600;
-                const chartH = 120;
+                const chartH = 145;
                 const padX = 36;
                 const padY = 16;
+                const padBottom = 22;
                 const plotW = chartW - padX * 2;
-                const plotH = chartH - padY * 2;
+                const plotH = chartH - padY - padBottom;
                 const points = recentHistory.map((item, i) => ({
                   x: padX + (i / Math.max(recentHistory.length - 1, 1)) * plotW,
                   y: padY + plotH - (item.score / 100) * plotH,
                   score: item.score,
                   title: item.meetingTitle,
+                  date: item.analyzedAt,
                 }));
                 const pathD = points.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`).join(" ");
 
@@ -201,6 +232,12 @@ export default function HistoryPage() {
                     </h2>
                     <div className="w-full overflow-x-auto">
                       <svg viewBox={`0 0 ${chartW} ${chartH}`} className="w-full h-auto" preserveAspectRatio="xMidYMid meet">
+                        <defs>
+                          <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor={strokeColor} stopOpacity="0.25" />
+                            <stop offset="100%" stopColor={strokeColor} stopOpacity="0" />
+                          </linearGradient>
+                        </defs>
                         {/* Grid lines */}
                         {[0, 25, 50, 75, 100].map((val) => {
                           const y = padY + plotH - (val / 100) * plotH;
@@ -211,17 +248,25 @@ export default function HistoryPage() {
                             </g>
                           );
                         })}
-                        {/* Area fill */}
-                        <path d={`${pathD} L ${points[points.length - 1].x} ${padY + plotH} L ${points[0].x} ${padY + plotH} Z`} fill={strokeColor} fillOpacity="0.08" />
+                        {/* Area fill with gradient */}
+                        <path d={`${pathD} L ${points[points.length - 1].x} ${padY + plotH} L ${points[0].x} ${padY + plotH} Z`} fill="url(#areaGradient)" />
                         {/* Line */}
                         <path d={pathD} fill="none" stroke={strokeColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                        {/* Dots */}
-                        {points.map((p, i) => (
-                          <g key={i}>
-                            <circle cx={p.x} cy={p.y} r="4" fill="var(--surface)" stroke={strokeColor} strokeWidth="2" />
-                            <title>{p.title}: {p.score}分</title>
-                          </g>
-                        ))}
+                        {/* Dots with tooltip */}
+                        {points.map((p, i) => {
+                          const d = new Date(p.date);
+                          const dateLabel = `${d.getMonth() + 1}/${d.getDate()}`;
+                          return (
+                            <g key={i}>
+                              <circle cx={p.x} cy={p.y} r="5" fill="var(--surface)" stroke={strokeColor} strokeWidth="2" className="transition-all duration-200 hover:r-7" style={{ cursor: "pointer" }} />
+                              <title>{p.title}: {p.score}分 ({dateLabel})</title>
+                              {/* Date label on axis */}
+                              <text x={p.x} y={chartH - 4} textAnchor="middle" fill="var(--text-muted)" fontSize="8">
+                                {i % 2 === 0 || points.length <= 5 ? dateLabel : ""}
+                              </text>
+                            </g>
+                          );
+                        })}
                       </svg>
                     </div>
                   </div>
@@ -271,6 +316,36 @@ export default function HistoryPage() {
                     </button>
                   ))}
                 </div>
+
+                {/* Export all button */}
+                <button
+                  onClick={() => {
+                    const exportData = filteredHistory.map((item) => ({
+                      id: item.id,
+                      title: item.meetingTitle,
+                      score: item.score,
+                      levelLabel: item.levelLabel,
+                      breakdown: item.breakdown,
+                      actionItemCount: item.actionItemCount,
+                      wordCount: item.wordCount,
+                      analyzedAt: item.analyzedAt,
+                    }));
+                    const json = JSON.stringify(exportData, null, 2);
+                    const blob = new Blob([json], { type: "application/json;charset=utf-8" });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = `会议分析历史_${new Date().toISOString().slice(0, 10)}.json`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                    showToast(`已导出 ${filteredHistory.length} 条记录`, "success");
+                  }}
+                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium bg-primary/10 text-primary hover:bg-primary hover:text-white transition-all shrink-0"
+                >
+                  <IconDownload size={14} /> 导出全部
+                </button>
               </div>
 
               {/* Empty filter result */}
@@ -298,22 +373,46 @@ export default function HistoryPage() {
                 const nonPct =
                   total > 0 ? (item.breakdown.nonsense / total) * 100 : 0;
 
+                // Min/Max indicators
+                const allScores = history.map((h) => h.score);
+                const historicalMax = Math.max(...allScores);
+                const historicalMin = Math.min(...allScores);
+                const isHighest = item.score === historicalMax && history.length > 1;
+                const isLowest = item.score === historicalMin && history.length > 1;
+
                 return (
                   <div
                     key={item.id}
-                    className={`bg-surface rounded-2xl p-5 shadow-sm border mb-4 fade-up transition-all duration-150 ${highlightedIndex === idx ? "border-primary ring-2 ring-primary/20" : "border-border"}`}
+                    className={`bg-surface rounded-2xl p-5 shadow-sm mb-4 fade-up transition-all duration-150 group relative overflow-hidden ${
+                      highlightedIndex === idx ? "border-2 border-primary ring-2 ring-primary/20" : "border-l-[3px] border-t-0 border-r-0 border-b-0"
+                    } ${isHighest ? "border-l-effective" : isLowest ? "border-l-nonsense" : "border-l-border hover:border-l-primary"}`}
                   >
                     <div className="flex items-center gap-4">
                       {/* Left: Score badge */}
-                      <div
-                        className={`shrink-0 w-16 h-16 rounded-2xl flex flex-col items-center justify-center ${getScoreBgClass(
-                          item.score
-                        )}`}
-                      >
-                        <div className="text-2xl font-bold">{item.score}</div>
-                        <div className="text-[10px] mt-0.5">
-                          {item.levelLabel}
+                      <div className="shrink-0">
+                        <div
+                          className={`w-16 h-16 rounded-2xl flex flex-col items-center justify-center ${getScoreBgClass(
+                            item.score
+                          )}`}
+                        >
+                          <div className="text-2xl font-bold">{item.score}</div>
+                          <div className="text-[10px] mt-0.5">
+                            {item.levelLabel}
+                          </div>
                         </div>
+                        {/* Min/Max tag */}
+                        {isHighest && (
+                          <div className="text-[10px] text-effective font-bold text-center mt-1 flex items-center justify-center gap-0.5">
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15" /></svg>
+                            历史最高
+                          </div>
+                        )}
+                        {isLowest && (
+                          <div className="text-[10px] text-nonsense font-bold text-center mt-1 flex items-center justify-center gap-0.5">
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9" /></svg>
+                            历史最低
+                          </div>
+                        )}
                       </div>
 
                       {/* Middle: Info */}

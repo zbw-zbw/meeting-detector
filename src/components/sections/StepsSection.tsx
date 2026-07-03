@@ -30,7 +30,7 @@ export default function StepsSection() {
         <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-16">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-text-muted">
-              02 — 流程
+              02 &mdash; 流程
             </p>
             <h2 className="text-3xl sm:text-4xl font-extrabold text-text mt-4 leading-tight">
               三步搞定会议分析
@@ -43,14 +43,14 @@ export default function StepsSection() {
 
         {/* Timeline */}
         <div className="relative">
-          {/* Connecting line — desktop */}
-          <div className="hidden md:block absolute top-6 left-[16.66%] right-[16.66%] h-px bg-border" />
+          {/* Connecting line - desktop, with line draw animation */}
+          <div className="hidden md:block absolute top-6 left-[16.66%] right-[16.66%] h-px bg-border steps-line-animated" />
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-12 md:gap-8">
             {steps.map((step) => (
               <div key={step.number} className="relative text-center md:px-4">
-                {/* Number node */}
-                <div className="w-12 h-12 mx-auto rounded-full bg-bg border border-border flex items-center justify-center text-sm font-bold text-text relative z-10">
+                {/* Number node with hover pulse */}
+                <div className="step-node w-12 h-12 mx-auto rounded-full bg-bg border border-border flex items-center justify-center text-sm font-bold text-text relative z-10 cursor-default">
                   {step.number}
                 </div>
 

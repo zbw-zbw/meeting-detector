@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import type { SentenceAnalysis } from "@/types/analysis";
 import {
   filterButtons, getFilterActiveClass, getTypeBorderClass, getTypeBadgeClass,
@@ -17,15 +18,39 @@ interface SentenceListProps {
   setShowAll: (v: boolean | ((prev: boolean) => boolean)) => void;
 }
 
+/** Highlight matching text within a string */
+function highlightText(text: string, query: string): React.ReactNode {
+  if (!query.trim()) return text;
+  const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const regex = new RegExp(`(${escaped})`, "gi");
+  const parts = text.split(regex);
+  return parts.map((part, i) =>
+    regex.test(part) ? (
+      <mark key={i} className="bg-primary/20 text-text rounded px-0.5">{part}</mark>
+    ) : (
+      part
+    ),
+  );
+}
+
 export default function SentenceList({ sentences, filter, setFilter, showAll, setShowAll }: SentenceListProps) {
+  const [searchQuery, setSearchQuery] = useState("");
+
   if (sentences.length === 0) return null;
 
   const filteredSentences = sentences.filter(
-    (s) => filter === "all" || s.type === filter,
+    (s) => (filter === "all" || s.type === filter) &&
+      (searchQuery.trim() === "" || s.text.toLowerCase().includes(searchQuery.trim().toLowerCase())),
   );
 
   const displayedSentences = filteredSentences.slice(0, 20);
   const remainingCount = filteredSentences.length - 20;
+
+  // Mini donut data for stats bar
+  const effectiveCount = sentences.filter(s => s.type === "effective").length;
+  const repetitiveCount = sentences.filter(s => s.type === "repetitive").length;
+  const nonsenseCount = sentences.filter(s => s.type === "nonsense").length;
+  const total = sentences.length;
 
   return (
     <div className="bg-surface rounded-2xl p-6 sm:p-8 shadow-sm border border-border mb-6 fade-up">
@@ -34,7 +59,7 @@ export default function SentenceList({ sentences, filter, setFilter, showAll, se
         逐句分析详情
       </h2>
 
-      {/* Filter bar */}
+      {/* Filter bar + search */}
       <div className="flex flex-wrap items-center gap-2 mt-4 mb-4">
         {filterButtons.map((btn) => {
           const isActive = filter === btn.key;
@@ -63,16 +88,84 @@ export default function SentenceList({ sentences, filter, setFilter, showAll, se
         </span>
       </div>
 
-      {/* Sentence statistics */}
-      <div className="flex flex-wrap gap-x-4 gap-y-1 mb-4 text-xs text-text-muted bg-bg rounded-lg px-3 py-2">
-        <span>共分析 <strong className="text-text">{sentences.length}</strong> 句</span>
-        <span>其中有效 <strong className="text-effective">{sentences.filter(s => s.type === 'effective').length}</strong> 句 ({sentences.length > 0 ? Math.round(sentences.filter(s => s.type === 'effective').length / sentences.length * 100) : 0}%)</span>
-        <span>重复 <strong className="text-repetitive">{sentences.filter(s => s.type === 'repetitive').length}</strong> 句 ({sentences.length > 0 ? Math.round(sentences.filter(s => s.type === 'repetitive').length / sentences.length * 100) : 0}%)</span>
-        <span>废话 <strong className="text-nonsense">{sentences.filter(s => s.type === 'nonsense').length}</strong> 句 ({sentences.length > 0 ? Math.round(sentences.filter(s => s.type === 'nonsense').length / sentences.length * 100) : 0}%)</span>
+      {/* Search box */}
+      <div className="mb-4">
+        <div className="relative">
+          <IconSearch size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setShowAll(false);
+            }}
+            placeholder="搜索句子内容..."
+            className="w-full sm:w-64 pl-9 pr-3 py-1.5 text-sm bg-bg border border-border rounded-lg text-text placeholder:text-text-muted outline-none focus:border-primary transition-colors"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery("")}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-text-muted hover:text-text text-xs cursor-pointer"
+            >
+              清除
+            </button>
+          )}
+        </div>
       </div>
 
-      {/* Sentence list */}
-      <div>
+      {/* Sentence statistics with mini donut */}
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mb-4 text-xs text-text-muted bg-bg rounded-lg px-3 py-2">
+        <span>共分析 <strong className="text-text">{total}</strong> 句</span>
+        <span>有效 <strong className="text-effective">{effectiveCount}</strong> ({total > 0 ? Math.round(effectiveCount / total * 100) : 0}%)</span>
+        <span>重复 <strong className="text-repetitive">{repetitiveCount}</strong> ({total > 0 ? Math.round(repetitiveCount / total * 100) : 0}%)</span>
+        <span>废话 <strong className="text-nonsense">{nonsenseCount}</strong> ({total > 0 ? Math.round(nonsenseCount / total * 100) : 0}%)</span>
+        {/* Mini donut visualization */}
+        {total > 0 && (
+          <span className="ml-auto flex items-center gap-1">
+            <svg viewBox="0 0 24 24" width="20" height="20">
+              <circle
+                cx="12" cy="12" r="9"
+                fill="none"
+                stroke="var(--color-border-light)"
+                strokeWidth="4"
+              />
+              <circle
+                cx="12" cy="12" r="9"
+                fill="none"
+                stroke="var(--color-effective)"
+                strokeWidth="4"
+                strokeDasharray={`${56.55 * (effectiveCount / total)} ${56.55}`}
+                strokeDashoffset={0}
+                transform="rotate(-90 12 12)"
+                strokeLinecap="round"
+              />
+              <circle
+                cx="12" cy="12" r="9"
+                fill="none"
+                stroke="var(--color-repetitive)"
+                strokeWidth="4"
+                strokeDasharray={`${56.55 * (repetitiveCount / total)} ${56.55}`}
+                strokeDashoffset={-(56.55 * (effectiveCount / total))}
+                transform="rotate(-90 12 12)"
+                strokeLinecap="butt"
+              />
+              <circle
+                cx="12" cy="12" r="9"
+                fill="none"
+                stroke="var(--color-nonsense)"
+                strokeWidth="4"
+                strokeDasharray={`${56.55 * (nonsenseCount / total)} ${56.55}`}
+                strokeDashoffset={-(56.55 * ((effectiveCount + repetitiveCount) / total))}
+                transform="rotate(-90 12 12)"
+                strokeLinecap="butt"
+              />
+            </svg>
+          </span>
+        )}
+      </div>
+
+      {/* Sentence list with stagger animation */}
+      <div className="sentence-list-stagger">
         {displayedSentences.map((s, i) => {
           const isNonsense = s.type === "nonsense";
           const effectiveFillWidth = `${Math.round(s.confidence * 100)}%`;
@@ -94,7 +187,7 @@ export default function SentenceList({ sentences, filter, setFilter, showAll, se
                   )}
                 </div>
 
-                {/* text content */}
+                {/* text content with search highlight */}
                 <p
                   className={`flex-1 text-sm leading-relaxed ${
                     isNonsense
@@ -104,7 +197,7 @@ export default function SentenceList({ sentences, filter, setFilter, showAll, se
                         : "text-text"
                   }`}
                 >
-                  {s.text}
+                  {highlightText(s.text, searchQuery)}
                 </p>
 
                 {/* right side info */}
@@ -184,7 +277,7 @@ export default function SentenceList({ sentences, filter, setFilter, showAll, se
                         {s.speaker && (
                           <span className="text-xs font-medium text-text-muted">{s.speaker}</span>
                         )}
-                        <p className="text-sm text-text mt-0.5">{s.text}</p>
+                        <p className="text-sm text-text mt-0.5">{highlightText(s.text, searchQuery)}</p>
                       </div>
                       <span className={`shrink-0 text-xs font-medium px-2 py-0.5 rounded-full ${badgeClass}`}>
                         {typeLabel}

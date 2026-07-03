@@ -86,13 +86,28 @@ export default function ComparePage() {
           {/* Empty state */}
           {items.length === 0 && (
             <div className="text-center py-16 fade-up">
-              <div className="mb-4">
-                <IconChart size={48} className="text-text-muted mx-auto" />
+              <div className="mb-4 relative inline-block">
+                <IconChart size={48} className="text-text-muted mx-auto animate-pulse" />
               </div>
               <h2 className="text-xl font-bold text-text mb-2">暂无对比项目</h2>
               <p className="text-text-secondary mb-6">
                 在历史记录页面点击&ldquo;加入对比&rdquo;来添加会议
               </p>
+              {/* Step guide */}
+              <div className="max-w-sm mx-auto mb-8 space-y-4 text-left">
+                <div className="flex items-start gap-3">
+                  <span className="shrink-0 w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center">1</span>
+                  <span className="text-sm text-text-secondary">在历史记录中选择会议</span>
+                </div>
+                <div className="flex items-start gap-3">
+                  <span className="shrink-0 w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center">2</span>
+                  <span className="text-sm text-text-secondary">点击&ldquo;对比&rdquo;按钮添加到对比列表</span>
+                </div>
+                <div className="flex items-start gap-3">
+                  <span className="shrink-0 w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center">3</span>
+                  <span className="text-sm text-text-secondary">在此查看并排对比结果</span>
+                </div>
+              </div>
               <Link
                 href="/history"
                 className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-white rounded-xl font-semibold cta-btn"
@@ -153,7 +168,7 @@ export default function ComparePage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {[
+                      {([
                         { label: "效率评分", key: "score", format: (v: number) => v + "分" },
                         { label: "有效率", key: "effective", format: (v: number) => v + "%" },
                         { label: "重复率", key: "repetitive", format: (v: number) => v + "%" },
@@ -162,9 +177,26 @@ export default function ComparePage() {
                         { label: "行动项", key: "actionItemCount", format: (v: number) => v + "项" },
                         { label: "文字量", key: "wordCount", format: (v: number) => v + "字" },
                         { label: "参会人", key: "participantCount", format: (v: number) => v + "人" },
-                      ].map((row) => (
+                      ] as const).map((row) => {
+                        // For "效率评分" row, compute ranking arrows
+                        const isScoreRow = row.key === "score";
+                        let rankedOrder: number[] = [];
+                        if (isScoreRow && items.length > 1) {
+                          rankedOrder = items
+                            .map((i) => i.score)
+                            .sort((a, b) => b - a);
+                        }
+
+                        return (
                         <tr key={row.key} className="border-b border-border-light">
-                          <td className="p-4 font-medium text-text">{row.label}</td>
+                          <td className="p-4 font-medium text-text">
+                            {row.label}
+                            {isScoreRow && items.length > 1 && (
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline ml-1">
+                                <polyline points="18 15 12 9 6 15" />
+                              </svg>
+                            )}
+                          </td>
                           {items.map((item) => {
                             const val = (() => {
                               if (row.key === "effective" || row.key === "repetitive" || row.key === "nonsense") {
@@ -182,18 +214,34 @@ export default function ComparePage() {
                               ? Math.min(...allVals)
                               : Math.max(...allVals);
                             const isBest = items.length > 1 && val === best;
+
+                            // Ranking arrow for score row
+                            const rank = isScoreRow && rankedOrder.length > 0 ? rankedOrder.indexOf(val) + 1 : 0;
+
                             return (
                               <td
                                 key={item.id}
                                 className={`text-center p-4 ${isBest ? "font-bold text-effective" : "text-text-secondary"}`}
                               >
+                                {/* Rank arrow for score row */}
+                                {isScoreRow && items.length > 1 && rank === 1 && (
+                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--effective)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="inline mr-0.5">
+                                    <polyline points="18 15 12 9 6 15" />
+                                  </svg>
+                                )}
+                                {isScoreRow && items.length > 1 && rank === rankedOrder.length && (
+                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--nonsense)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="inline mr-0.5">
+                                    <polyline points="6 9 12 15 18 9" />
+                                  </svg>
+                                )}
                                 {row.format(val)}
                                 {isBest && " *"}
                               </td>
                             );
                           })}
                         </tr>
-                      ))}
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>
