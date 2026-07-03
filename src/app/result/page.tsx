@@ -15,7 +15,7 @@ import {
   IconShare, IconCopy, IconRefresh, IconCalendar, IconUser,
   IconBook, IconLayers, IconAlert, IconInbox, IconClipboard,
   IconSearch, IconChart, IconDot, IconChevronUp, IconChevronDown,
-  IconDownload
+  IconDownload, IconPlus
 } from "@/components/Icon";
 
 /* ─── helpers ─── */
@@ -136,6 +136,10 @@ export default function ResultPage() {
   const [checkedItems, setCheckedItems] = useState<Set<string>>(new Set());
   const [copied, setCopied] = useState(false);
   const [shared, setShared] = useState(false);
+  const [showAddAction, setShowAddAction] = useState(false);
+  const [newActionContent, setNewActionContent] = useState("");
+  const [newActionAssignee, setNewActionAssignee] = useState("");
+  const [newActionDeadline, setNewActionDeadline] = useState("");
 
   useFadeUp();
   const { showToast } = useToast();
@@ -357,6 +361,62 @@ export default function ResultPage() {
     return arr;
   })();
 
+  /* deep insights */
+  const deepInsights = (() => {
+    const insights: { icon: string; label: string; value: string; color: string }[] = [];
+    
+    // Most verbose speaker (most sentences, lowest effective rate)
+    const speakerMap = new Map<string, { total: number; effective: number }>();
+    for (const s of result.sentences) {
+      const name = s.speaker || "未知";
+      if (!speakerMap.has(name)) speakerMap.set(name, { total: 0, effective: 0 });
+      const entry = speakerMap.get(name)!;
+      entry.total++;
+      if (s.type === "effective") entry.effective++;
+    }
+    const speakers = Array.from(speakerMap.entries())
+      .map(([name, stats]) => ({ name, ...stats, rate: stats.total > 0 ? stats.effective / stats.total : 0 }))
+      .filter(s => s.total >= 2);
+    
+    if (speakers.length > 0) {
+      const mostVerbose = [...speakers].sort((a, b) => b.total - a.total)[0];
+      const mostConcise = [...speakers].sort((a, b) => a.total - b.total)[0];
+      const leastEffective = [...speakers].sort((a, b) => a.rate - b.rate)[0];
+      
+      if (mostVerbose.total > 3 && mostVerbose.rate < 0.5) {
+        insights.push({
+          icon: "talk",
+          label: "发言最多但效率最低",
+          value: `${mostVerbose.name}（${mostVerbose.total}句，有效率 ${Math.round(mostVerbose.rate * 100)}%）`,
+          color: "text-nonsense",
+        });
+      }
+      
+      if (mostConcise !== mostVerbose && mostConcise.rate > 0.8) {
+        insights.push({
+          icon: "zap",
+          label: "发言最少但效率最高",
+          value: `${mostConcise.name}（${mostConcise.total}句，有效率 ${Math.round(mostConcise.rate * 100)}%）`,
+          color: "text-effective",
+        });
+      }
+    }
+
+    // Nonsense rate
+    const nonsenseCount = result.sentences.filter(s => s.type === "nonsense").length;
+    const nonsenseRate = result.sentences.length > 0 ? nonsenseCount / result.sentences.length : 0;
+    if (nonsenseRate > 0.4) {
+      insights.push({
+        icon: "alert",
+        label: "废话率过高",
+        value: `${Math.round(nonsenseRate * 100)}% 的发言为废话，建议精简会议流程`,
+        color: "text-nonsense",
+      });
+    }
+
+    return insights;
+  })();
+
   return (
     <>
       <Navbar />
@@ -409,7 +469,7 @@ export default function ResultPage() {
             {/* Card 1 — Efficiency Score */}
             <div className={`relative bg-surface rounded-2xl p-6 shadow-sm border border-border overflow-hidden fade-up score-pulse ${
               score >= 90 ? "score-pulse-excellent" : score >= 70 ? "score-pulse-good" : score >= 50 ? "score-pulse-fair" : "score-pulse-poor"
-            }`}>
+            } score-flash`}>
               <div className={`h-1 -mx-6 -mt-6 mb-4 ${getScoreBarColor(score)}`} />
               <div className={`text-5xl font-extrabold ${getScoreTextColor(score)}`}>
                 {animScore}
@@ -904,7 +964,7 @@ export default function ResultPage() {
                         <p
                           className={`text-sm font-medium transition-all ${
                             checked
-                              ? "line-through text-text-muted"
+                              ? "line-through opacity-50 text-text-muted"
                               : "text-text"
                           }`}
                         >
@@ -935,6 +995,75 @@ export default function ResultPage() {
                 共 {result.actionItems.length} 项，已完成{" "}
                 {checkedItems.size} 项
               </p>
+                {/* Add Action Item */}
+                <div className="mt-4">
+                  {showAddAction ? (
+                    <div className="space-y-2 p-3 rounded-xl bg-bg border border-border">
+                      <input
+                        type="text"
+                        placeholder="行动项内容"
+                        value={newActionContent}
+                        onChange={(e) => setNewActionContent(e.target.value)}
+                        className="w-full px-3 py-2 rounded-lg border border-border bg-surface text-sm text-text placeholder:text-text-muted focus:border-primary outline-none"
+                      />
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          placeholder="责任人"
+                          value={newActionAssignee}
+                          onChange={(e) => setNewActionAssignee(e.target.value)}
+                          className="flex-1 px-3 py-2 rounded-lg border border-border bg-surface text-sm text-text placeholder:text-text-muted focus:border-primary outline-none"
+                        />
+                        <input
+                          type="text"
+                          placeholder="截止时间"
+                          value={newActionDeadline}
+                          onChange={(e) => setNewActionDeadline(e.target.value)}
+                          className="flex-1 px-3 py-2 rounded-lg border border-border bg-surface text-sm text-text placeholder:text-text-muted focus:border-primary outline-none"
+                        />
+                      </div>
+                      <div className="flex gap-2 justify-end">
+                        <button
+                          onClick={() => { setShowAddAction(false); setNewActionContent(""); setNewActionAssignee(""); setNewActionDeadline(""); }}
+                          className="px-3 py-1.5 text-xs rounded-lg bg-surface border border-border text-text-secondary hover:bg-border-light transition-colors"
+                        >
+                          取消
+                        </button>
+                        <button
+                          onClick={() => {
+                            if (!newActionContent.trim()) return;
+                            const newAction = {
+                              id: crypto.randomUUID(),
+                              content: newActionContent.trim(),
+                              assignee: newActionAssignee.trim() || "未指定",
+                              deadline: newActionDeadline.trim() || "未指定",
+                              priority: "medium" as const,
+                            };
+                            setResult(prev => prev ? {
+                              ...prev,
+                              actionItems: [...prev.actionItems, newAction],
+                            } : null);
+                            setNewActionContent("");
+                            setNewActionAssignee("");
+                            setNewActionDeadline("");
+                            setShowAddAction(false);
+                            showToast("行动项已添加", "success");
+                          }}
+                          className="px-3 py-1.5 text-xs rounded-lg bg-primary text-white hover:bg-primary-dark transition-colors"
+                        >
+                          添加
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setShowAddAction(true)}
+                      className="text-xs text-primary hover:underline flex items-center gap-1"
+                    >
+                      <IconPlus size={12} /> 添加行动项
+                    </button>
+                  )}
+                </div>
             </div>
           )}
 
@@ -959,6 +1088,29 @@ export default function ResultPage() {
               <p className="text-text-secondary leading-relaxed">
                 {result.summary}
               </p>
+
+              {/* Deep Insights */}
+              {deepInsights.length > 0 && (
+                <div className="bg-primary/5 rounded-2xl p-5 sm:p-6 border border-primary/10 mb-6 fade-up">
+                  <h3 className="text-sm font-bold text-text mb-4 flex items-center gap-2">
+                    <IconLightbulb size={16} className="text-primary" />
+                    深度洞察
+                  </h3>
+                  <div className="space-y-3">
+                    {deepInsights.map((insight, i) => (
+                      <div key={i} className="flex items-start gap-3">
+                        <span className={`text-sm font-medium shrink-0 mt-0.5 ${insight.color}`}>
+                          {insight.icon === "talk" ? "Dialogue" : insight.icon === "zap" ? "Efficient" : insight.icon === "alert" ? "Alert" : ""}
+                        </span>
+                        <div>
+                          <p className="text-sm font-medium text-text">{insight.label}</p>
+                          <p className={`text-sm ${insight.color}`}>{insight.value}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {result.keyDecisions.length > 0 && (
                 <div className="mt-6">

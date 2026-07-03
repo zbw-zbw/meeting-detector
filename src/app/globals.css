@@ -62,6 +62,9 @@
 }
 
 /* ========== Base ========== */
+html {
+  transition: background-color 0.3s ease;
+}
 body {
   background-color: var(--bg);
   background-image: radial-gradient(circle, var(--border) 1px, transparent 1px);
@@ -140,6 +143,10 @@ body {
   }
   .ring-animated {
     animation: none;
+  }
+  .score-flash::before {
+    animation: none;
+    display: none;
   }
   * {
     transition-duration: 0.01ms !important;
@@ -227,6 +234,22 @@ body {
 .score-pulse-good::after { display: none; }
 .score-pulse-excellent::after { background-color: var(--effective); animation: none; opacity: 0.6; }
 
+/* ========== Score Flash (Signature Moment) ========== */
+@keyframes scoreFlash {
+  0% { opacity: 0; transform: scale(0.8); }
+  50% { opacity: 0.15; }
+  100% { opacity: 0; transform: scale(1.5); }
+}
+.score-flash::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(circle, var(--primary) 0%, transparent 70%);
+  animation: scoreFlash 1.2s ease-out 0.3s both;
+  pointer-events: none;
+}
+
 /* ========== Toast Animations ========== */
 @keyframes toastShake {
   0%, 100% { transform: translateX(0); }
@@ -263,6 +286,35 @@ body {
 }
 .clear-feedback-exit {
   animation: fadeOut 0.3s ease-out forwards;
+}
+
+/* ========== Hero Mockup Breathing Animation ========== */
+@keyframes heroBreathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.01); }
+}
+.hero-mockup-breathe {
+  animation: heroBreathe 4s ease-in-out infinite;
+}
+
+/* ========== Hero Mockup Glow ========== */
+.hero-mockup-glow {
+  position: relative;
+}
+.hero-mockup-glow::after {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  background: linear-gradient(135deg, var(--primary) 0%, transparent 50%, var(--effective) 100%);
+  opacity: 0.08;
+  animation: heroBreathe 4s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+.hero-mockup-glow > * {
+  position: relative;
+  z-index: 1;
 }
 
 /* ========== Focus ========== */

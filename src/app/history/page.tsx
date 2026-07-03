@@ -14,7 +14,7 @@ import {
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
-import { IconBook, IconTrash, IconInbox, IconArrowRight } from "@/components/Icon";
+import { IconBook, IconTrash, IconInbox, IconArrowRight, IconSearch, IconX, IconTrendingUp } from "@/components/Icon";
 
 export default function HistoryPage() {
   useFadeUp();
@@ -24,6 +24,9 @@ export default function HistoryPage() {
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [scoreFilter, setScoreFilter] = useState<"all" | "high" | "medium" | "low">("all");
+  const [highlightedIndex, setHighlightedIndex] = useState(-1);
 
   useEffect(() => {
     const data = getHistory();
@@ -49,6 +52,39 @@ export default function HistoryPage() {
   );
   const minScore =
     history.length > 0 ? Math.min(...history.map((item) => item.score)) : "—";
+
+  // Filter history
+  const filteredHistory = history.filter((item) => {
+    // Search filter
+    if (searchQuery && !item.meetingTitle.toLowerCase().includes(searchQuery.toLowerCase())) {
+      return false;
+    }
+    // Score filter
+    if (scoreFilter === "high" && item.score < 70) return false;
+    if (scoreFilter === "medium" && (item.score < 50 || item.score >= 70)) return false;
+    if (scoreFilter === "low" && item.score >= 50) return false;
+    return true;
+  });
+
+  /* keyboard navigation */
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement) return; // don't intercept search input
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setHighlightedIndex((prev) => Math.min(prev + 1, filteredHistory.length - 1));
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        setHighlightedIndex((prev) => Math.max(prev - 1, -1));
+      } else if (e.key === "Enter" && highlightedIndex >= 0) {
+        e.preventDefault();
+        viewReport(filteredHistory[highlightedIndex]);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filteredHistory, highlightedIndex]);
 
   return (
     <>
@@ -134,8 +170,121 @@ export default function HistoryPage() {
                 </div>
               </div>
 
-              {/* History List */}
-              {history.map((item) => {
+              {/* Efficiency Trend Chart */}
+              {history.length >= 2 && (() => {
+                const recentHistory = history.slice(0, 10).reverse(); // last 10, chronological
+                const chartW = 600;
+                const chartH = 120;
+                const padX = 36;
+                const padY = 16;
+                const plotW = chartW - padX * 2;
+                const plotH = chartH - padY * 2;
+                const points = recentHistory.map((item, i) => ({
+                  x: padX + (i / Math.max(recentHistory.length - 1, 1)) * plotW,
+                  y: padY + plotH - (item.score / 100) * plotH,
+                  score: item.score,
+                  title: item.meetingTitle,
+                }));
+                const pathD = points.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`).join(" ");
+
+                // Gradient color based on average score
+                const avg = recentHistory.reduce((s, h) => s + h.score, 0) / recentHistory.length;
+                const strokeColor = avg >= 70 ? "var(--effective)" : avg >= 50 ? "var(--repetitive)" : "var(--nonsense)";
+
+                return (
+                  <div className="bg-surface rounded-2xl p-6 shadow-sm border border-border mb-6 fade-up">
+                    <h2 className="text-sm font-bold text-text mb-4 flex items-center gap-2">
+                      <IconTrendingUp size={16} className="text-primary" />
+                      效率趋势（最近 {recentHistory.length} 次）
+                    </h2>
+                    <div className="w-full overflow-x-auto">
+                      <svg viewBox={`0 0 ${chartW} ${chartH}`} className="w-full h-auto" preserveAspectRatio="xMidYMid meet">
+                        {/* Grid lines */}
+                        {[0, 25, 50, 75, 100].map((val) => {
+                          const y = padY + plotH - (val / 100) * plotH;
+                          return (
+                            <g key={val}>
+                              <line x1={padX} y1={y} x2={chartW - padX} y2={y} stroke="var(--border-light)" strokeWidth="1" />
+                              <text x={padX - 6} y={y + 3} textAnchor="end" fill="var(--text-muted)" fontSize="9">{val}</text>
+                            </g>
+                          );
+                        })}
+                        {/* Area fill */}
+                        <path d={`${pathD} L ${points[points.length - 1].x} ${padY + plotH} L ${points[0].x} ${padY + plotH} Z`} fill={strokeColor} fillOpacity="0.08" />
+                        {/* Line */}
+                        <path d={pathD} fill="none" stroke={strokeColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        {/* Dots */}
+                        {points.map((p, i) => (
+                          <g key={i}>
+                            <circle cx={p.x} cy={p.y} r="4" fill="var(--surface)" stroke={strokeColor} strokeWidth="2" />
+                            <title>{p.title}: {p.score}分</title>
+                          </g>
+                        ))}
+                      </svg>
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* Search & Filter Bar */}
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mb-5 fade-up">
+                {/* Search input */}
+                <div className="relative flex-1">
+                  <IconSearch size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" />
+                  <input
+                    type="text"
+                    placeholder="搜索会议标题..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full pl-9 pr-9 py-2.5 rounded-xl border border-border bg-surface text-sm text-text placeholder:text-text-muted focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                  />
+                  {searchQuery && (
+                    <button
+                      onClick={() => setSearchQuery("")}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text transition-colors"
+                    >
+                      <IconX size={14} />
+                    </button>
+                  )}
+                </div>
+
+                {/* Score filter buttons */}
+                <div className="flex items-center gap-1.5">
+                  {([
+                    { key: "all", label: "全部" },
+                    { key: "high", label: "高效" },
+                    { key: "medium", label: "中等" },
+                    { key: "low", label: "低效" },
+                  ] as const).map((f) => (
+                    <button
+                      key={f.key}
+                      onClick={() => setScoreFilter(f.key)}
+                      className={`px-3 py-2 rounded-lg text-xs font-medium transition-all ${
+                        scoreFilter === f.key
+                          ? "bg-primary text-white"
+                          : "bg-surface border border-border text-text-secondary hover:bg-border-light"
+                      }`}
+                    >
+                      {f.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Empty filter result */}
+              {filteredHistory.length === 0 && history.length > 0 && (
+                <div className="text-center py-12 fade-up">
+                  <p className="text-text-muted text-sm">没有匹配的记录</p>
+                  <button
+                    onClick={() => { setSearchQuery(""); setScoreFilter("all"); }}
+                    className="text-sm text-primary hover:underline mt-2"
+                  >
+                    清除筛选条件
+                  </button>
+                </div>
+              )}
+
+              {filteredHistory.map((item, idx) => {
                 const total =
                   item.breakdown.effective +
                   item.breakdown.repetitive +
@@ -150,7 +299,7 @@ export default function HistoryPage() {
                 return (
                   <div
                     key={item.id}
-                    className="bg-surface rounded-2xl p-5 shadow-sm border border-border mb-4 fade-up"
+                    className={`bg-surface rounded-2xl p-5 shadow-sm border mb-4 fade-up transition-all duration-150 ${highlightedIndex === idx ? "border-primary ring-2 ring-primary/20" : "border-border"}`}
                   >
                     <div className="flex items-center gap-4">
                       {/* Left: Score badge */}

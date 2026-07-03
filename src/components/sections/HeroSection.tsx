@@ -49,7 +49,7 @@ export default function HeroSection() {
 
         {/* Right Column - Report Mockup */}
         <div className="lg:col-span-5">
-          <div className="bg-surface rounded-2xl border border-border shadow-sm overflow-hidden">
+          <div className="hero-mockup-breathe hero-mockup-glow bg-surface rounded-2xl border border-border shadow-sm overflow-hidden">
             {/* Header */}
             <div className="px-5 py-4 border-b border-border-light flex items-start justify-between gap-3">
               <div>

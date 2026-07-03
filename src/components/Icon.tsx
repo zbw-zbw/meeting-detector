@@ -331,6 +331,15 @@ export function IconDot({ size = 12, ...p }: IconProps) {
 }
 
 /* ─── UI controls ─── */
+export function IconX({ size = 16, ...p }: IconProps) {
+  return (
+    <svg {...base(size)} {...p}>
+      <line x1="18" y1="6" x2="6" y2="18" />
+      <line x1="6" y1="6" x2="18" y2="18" />
+    </svg>
+  );
+}
+
 export function IconClose({ size = 16, ...p }: IconProps) {
   return (
     <svg {...base(size)} {...p}>
@@ -362,6 +371,14 @@ export function IconDownload({ size = 16, ...p }: IconProps) {
       <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
       <polyline points="7 10 12 15 17 10" />
       <line x1="12" y1="15" x2="12" y2="3" />
+    </svg>
+  );
+}
+
+export function IconPlus({ size = 16, ...p }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}>
+      <path d="M12 5v14M5 12h14" />
     </svg>
   );
 }
