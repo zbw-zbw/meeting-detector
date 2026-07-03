@@ -230,7 +230,19 @@ export default function ResultPage() {
   /* share report */
   const handleShare = useCallback(() => {
     if (!result) return;
-    const shareText = `[会议效率报告] - ${result.meetingTitle}\n效率评分：${result.score}分（${result.levelLabel}）\n有效信息：${result.breakdown?.effective ?? 0}% | 重复：${result.breakdown?.repetitive ?? 0}% | 废话：${result.breakdown?.nonsense ?? 0}%`;
+    const bd2 = result.breakdown ?? { effective: 0, repetitive: 0, nonsense: 0 };
+    const shareText = [
+      "┌──────────────────────────────────┐",
+      "│        会议效率报告              │",
+      "│                                  │",
+      `│  ${result.meetingTitle.padEnd(28)}│`,
+      `│  效率评分: ${result.score}分 (${result.levelLabel.padEnd(4)})        │`,
+      `│  有效 ${String(bd2.effective).padStart(2)}% | 重复 ${String(bd2.repetitive).padStart(2)}% | 废话 ${String(bd2.nonsense).padStart(2)}%  │`,
+      `│  ${String(result.sentences.length).padStart(2)}句分析 | ${String(result.actionItems.length).padStart(2)}个行动项          │`,
+      "│                                  │",
+      "│  由「会议废话检测器」AI 生成      │",
+      "└──────────────────────────────────┘",
+    ].join("\n");
 
     if (navigator.share) {
       navigator.share({
@@ -321,6 +333,30 @@ export default function ResultPage() {
   const score = result.score;
   const scoreColor = getScoreRawColor(score);
 
+  /* speaker efficiency aggregation */
+  const speakerStats = (() => {
+    const hasSpeakers = result.sentences.some((s) => s.speaker);
+    if (!hasSpeakers) return null;
+
+    const map = new Map<string, { total: number; effective: number; repetitive: number; nonsense: number }>();
+    for (const s of result.sentences) {
+      const name = s.speaker || "未知";
+      if (!map.has(name)) map.set(name, { total: 0, effective: 0, repetitive: 0, nonsense: 0 });
+      const entry = map.get(name)!;
+      entry.total++;
+      if (s.type === "effective") entry.effective++;
+      else if (s.type === "repetitive") entry.repetitive++;
+      else entry.nonsense++;
+    }
+    const arr = Array.from(map.entries()).map(([name, stats]) => ({
+      name,
+      ...stats,
+      effectiveRate: Math.round((stats.effective / stats.total) * 100),
+    }));
+    arr.sort((a, b) => b.effectiveRate - a.effectiveRate);
+    return arr;
+  })();
+
   return (
     <>
       <Navbar />
@@ -371,7 +407,9 @@ export default function ResultPage() {
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
 
             {/* Card 1 — Efficiency Score */}
-            <div className="bg-surface rounded-2xl p-6 shadow-sm border border-border overflow-hidden fade-up">
+            <div className={`relative bg-surface rounded-2xl p-6 shadow-sm border border-border overflow-hidden fade-up score-pulse ${
+              score >= 90 ? "score-pulse-excellent" : score >= 70 ? "score-pulse-good" : score >= 50 ? "score-pulse-fair" : "score-pulse-poor"
+            }`}>
               <div className={`h-1 -mx-6 -mt-6 mb-4 ${getScoreBarColor(score)}`} />
               <div className={`text-5xl font-extrabold ${getScoreTextColor(score)}`}>
                 {animScore}
@@ -453,7 +491,7 @@ export default function ResultPage() {
                       transform="rotate(-90 100 100)"
                       style={{
                         transition:
-                          "stroke-dashoffset 1.5s cubic-bezier(0.4, 0, 0.2, 1)",
+                          "stroke-dashoffset 1.2s cubic-bezier(0.4, 0, 0.2, 1) 0s",
                       }}
                     />
 
@@ -471,7 +509,7 @@ export default function ResultPage() {
                       transform="rotate(-90 100 100)"
                       style={{
                         transition:
-                          "stroke-dashoffset 1.5s cubic-bezier(0.4, 0, 0.2, 1)",
+                          "stroke-dashoffset 1.2s cubic-bezier(0.4, 0, 0.2, 1) 0.1s",
                       }}
                     />
 
@@ -489,7 +527,7 @@ export default function ResultPage() {
                       transform="rotate(-90 100 100)"
                       style={{
                         transition:
-                          "stroke-dashoffset 1.5s cubic-bezier(0.4, 0, 0.2, 1)",
+                          "stroke-dashoffset 1.2s cubic-bezier(0.4, 0, 0.2, 1) 0.2s",
                       }}
                     />
 
@@ -652,7 +690,7 @@ export default function ResultPage() {
                   return (
                     <div
                       key={i}
-                      className={`p-4 rounded-xl border-l-4 mb-3 transition-all duration-300 ${
+                      className={`sentence-card p-4 rounded-xl border-l-4 mb-3 transition-all duration-300 ${
                         getTypeBorderClass(s.type)
                       } ${isNonsense ? "bg-nonsense-bg" : "bg-surface"}`}
                     >
@@ -696,7 +734,7 @@ export default function ResultPage() {
                           <div className="flex items-center gap-1.5">
                             <div className="w-16 h-1.5 rounded-full bg-border-light overflow-hidden">
                               <div
-                                className={`h-full rounded-full transition-all duration-700 ease-out ${
+                                className={`confidence-bar-fill h-full rounded-full transition-all duration-700 ease-out ${
                                   s.type === "effective"
                                     ? "bg-effective"
                                     : s.type === "repetitive"
@@ -737,6 +775,63 @@ export default function ResultPage() {
                   </button>
                 </div>
               )}
+            </div>
+          )}
+
+          {speakerStats && speakerStats.length > 1 && (
+            <div className="bg-surface rounded-2xl p-6 sm:p-8 shadow-sm border border-border mb-6 fade-up">
+              <h2 className="text-lg font-bold text-text mb-1">
+                <IconUsers size={20} className="inline mr-2 text-primary" />
+                发言人效率排行
+              </h2>
+              <p className="text-xs text-text-muted mb-5">基于逐句分析数据，按有效率降序排列</p>
+
+              <div className="space-y-4">
+                {speakerStats.map((sp) => (
+                  <div key={sp.name} className="flex items-center gap-4">
+                    {/* Name */}
+                    <span className="text-sm font-medium text-text w-16 shrink-0 truncate">{sp.name}</span>
+
+                    {/* Stacked bar */}
+                    <div className="flex-1 flex h-3 rounded-full overflow-hidden bg-border-light">
+                      <div
+                        className="bg-effective transition-all duration-700"
+                        style={{ width: `${sp.effective}%` }}
+                      />
+                      <div
+                        className="bg-repetitive transition-all duration-700"
+                        style={{ width: `${sp.repetitive}%` }}
+                      />
+                      <div
+                        className="bg-nonsense transition-all duration-700"
+                        style={{ width: `${sp.nonsense}%` }}
+                      />
+                    </div>
+
+                    {/* Stats */}
+                    <span className={`text-sm font-bold shrink-0 w-12 text-right ${
+                      sp.effectiveRate >= 80 ? "text-effective" : sp.effectiveRate >= 50 ? "text-repetitive" : "text-nonsense"
+                    }`}>
+                      {sp.effectiveRate}%
+                    </span>
+                    <span className="text-xs text-text-muted shrink-0 w-10 text-right">{sp.total}条</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Legend + highlights */}
+              <div className="flex flex-wrap items-center gap-4 mt-5 pt-4 border-t border-border">
+                <div className="flex items-center gap-3">
+                  <span className="flex items-center gap-1 text-xs text-text-muted"><span className="w-2.5 h-2.5 rounded-full bg-effective inline-block" />有效</span>
+                  <span className="flex items-center gap-1 text-xs text-text-muted"><span className="w-2.5 h-2.5 rounded-full bg-repetitive inline-block" />重复</span>
+                  <span className="flex items-center gap-1 text-xs text-text-muted"><span className="w-2.5 h-2.5 rounded-full bg-nonsense inline-block" />废话</span>
+                </div>
+                <span className="text-xs text-text-muted ml-auto">
+                  最高效: <strong className="text-effective">{speakerStats[0].name}</strong>
+                  {" / "}
+                  最需改进: <strong className="text-nonsense">{speakerStats[speakerStats.length - 1].name}</strong>
+                </span>
+              </div>
             </div>
           )}
 

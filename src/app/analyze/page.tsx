@@ -8,7 +8,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/components/ToastProvider";
 import { saveToHistory } from "@/lib/history";
-import { IconClipboard, IconCalendar, IconLightbulb, IconSearch, IconAlert, IconFileText, IconClose } from "@/components/Icon";
+import { IconClipboard, IconCalendar, IconLightbulb, IconSearch, IconAlert, IconFileText, IconClose, IconCheckCircle } from "@/components/Icon";
 
 const EXAMPLES: Record<string, string> = {
   planning: `会议主题：Q3产品规划讨论会
@@ -109,6 +109,7 @@ export default function AnalyzePage() {
   const [error, setError] = useState<string | null>(null);
   const [completedStep, setCompletedStep] = useState(-1);
   const [isDragging, setIsDragging] = useState(false);
+  const [clearedFeedback, setClearedFeedback] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const router = useRouter();
   const { showToast } = useToast();
@@ -259,6 +260,8 @@ export default function AnalyzePage() {
     if (loading) return;
     setText("");
     textareaRef.current?.focus();
+    setClearedFeedback(true);
+    setTimeout(() => setClearedFeedback(false), 1500);
   }, [loading]);
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -308,7 +311,7 @@ export default function AnalyzePage() {
               onKeyDown={handleKeyDown}
               disabled={loading}
               placeholder={`在这里粘贴会议纪要或文字记录...\n\n支持任意格式，建议包含发言人标注以获得更准确的分析。`}
-              className="w-full min-h-[300px] sm:min-h-[400px] bg-surface rounded-2xl border border-border p-5 sm:p-6 text-text text-base leading-relaxed resize-y placeholder:text-text-muted focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none disabled:opacity-60 disabled:cursor-not-allowed"
+              className="w-full min-h-[300px] sm:min-h-[400px] bg-surface rounded-2xl border border-border p-5 sm:p-6 text-text text-base leading-relaxed resize-y placeholder:text-text-muted textarea-glow focus:border-primary transition-all outline-none disabled:opacity-60 disabled:cursor-not-allowed"
             />
             {isDragging && (
               <div className="absolute inset-0 bg-primary/10 backdrop-blur-sm rounded-2xl border-2 border-dashed border-primary flex items-center justify-center z-20 pointer-events-none">
@@ -324,82 +327,69 @@ export default function AnalyzePage() {
 
             {/* Loading Overlay */}
             {loading && (
-              <div className="absolute inset-0 bg-surface/80 backdrop-blur-sm rounded-2xl flex flex-col items-center justify-center gap-6 z-10">
-                {/* Spinning ring */}
-                <div className="relative w-16 h-16">
-                  <svg
-                    className="w-16 h-16 animate-spin"
-                    viewBox="0 0 64 64"
-                    fill="none"
-                  >
-                    <circle
-                      cx="32"
-                      cy="32"
-                      r="28"
-                      stroke="var(--border-light)"
-                      strokeWidth="4"
-                    />
-                    <circle
-                      cx="32"
-                      cy="32"
-                      r="28"
-                      stroke="var(--primary)"
-                      strokeWidth="4"
-                      strokeLinecap="round"
-                      strokeDasharray="120 56"
-                    />
-                  </svg>
-                </div>
-
-                <p className="text-text font-semibold">
-                  AI 正在逐句分析会议内容...
-                </p>
-
-                {/* Progress Steps */}
-                <div className="flex flex-col gap-2">
+              <div className="absolute inset-0 bg-surface/90 backdrop-blur-sm rounded-2xl flex flex-col items-center justify-center gap-8 z-10">
+                {/* Step Indicator */}
+                <div className="flex items-center gap-0 w-full max-w-xs px-6">
                   {LOADING_STEPS.map((step, i) => {
                     const done = completedStep >= i;
-                    const active = completedStep === i - 1 && i > 0;
+                    const active = i === completedStep + 1 || (completedStep === -1 && i === 0);
                     return (
-                      <div
-                        key={step.label}
-                        className={`flex items-center gap-2 text-sm transition-all duration-500 ${
+                      <div key={step.label} className="flex items-center flex-1 last:flex-none">
+                        {/* Step circle */}
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-sm font-bold transition-all duration-500 ${
                           done
-                            ? "text-primary"
+                            ? "bg-primary text-white"
                             : active
-                              ? "text-text-secondary animate-pulse"
-                              : "text-text-muted"
-                        }`}
-                      >
-                        <span className="w-5 h-5 flex items-center justify-center rounded-full bg-border-light shrink-0">
+                              ? "bg-primary/10 text-primary border-2 border-primary"
+                              : "bg-border-light text-text-muted"
+                        }`}>
                           {done ? (
-                            <svg
-                              width="12"
-                              height="12"
-                              viewBox="0 0 12 12"
-                              fill="none"
-                            >
-                              <path
-                                d="M2 6l3 3 5-5"
-                                stroke="var(--primary)"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              />
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                              <path d="M3 8l4 4 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                             </svg>
-                          ) : active ? (
-                            <span className="w-2 h-2 rounded-full bg-primary" />
                           ) : (
-                            <span className="w-1.5 h-1.5 rounded-full bg-text-muted" />
+                            <span className="text-xs">{i + 1}</span>
                           )}
-                        </span>
-                        {step.label}
+                        </div>
+                        {/* Connector line */}
+                        {i < LOADING_STEPS.length - 1 && (
+                          <div className={`flex-1 h-0.5 mx-2 rounded transition-all duration-500 ${
+                            completedStep >= i ? "bg-primary" : "bg-border-light"
+                          }`} />
+                        )}
                       </div>
                     );
                   })}
                 </div>
 
-                <p className="text-xs text-text-muted">
+                {/* Step labels */}
+                <div className="flex flex-col gap-2 mt-2">
+                  {LOADING_STEPS.map((step, i) => {
+                    const done = completedStep >= i;
+                    const active = i === completedStep + 1 || (completedStep === -1 && i === 0);
+                    return (
+                      <p key={step.label} className={`text-sm transition-all duration-500 ${
+                        done
+                          ? "text-primary font-medium"
+                          : active
+                            ? "text-text-secondary"
+                            : "text-text-muted"
+                      }`}>
+                        {done && <span className="inline-block mr-1">--</span>}
+                        {step.label}
+                        {active && (
+                          <span className="inline-flex gap-1 ml-2">
+                            <span className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce" style={{ animationDelay: "0ms" }} />
+                            <span className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce" style={{ animationDelay: "150ms" }} />
+                            <span className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce" style={{ animationDelay: "300ms" }} />
+                          </span>
+                        )}
+                      </p>
+                    );
+                  })}
+                </div>
+
+                <p className="text-xs text-text-muted mt-2">
                   分析通常需要 10-30 秒
                 </p>
               </div>
@@ -448,9 +438,13 @@ export default function AnalyzePage() {
             ))}
           </div>
 
-          {/* Hint */}
+          {/* Hint / Clear Feedback */}
           <div className="mt-3 fade-up">
-            {charCount > 0 && charCount < 200 ? (
+            {clearedFeedback ? (
+              <p className="text-sm text-primary flex items-center gap-1.5 clear-feedback-enter">
+                <IconCheckCircle size={14} className="text-primary" /> 已清空，可重新粘贴内容
+              </p>
+            ) : charCount > 0 && charCount < 200 ? (
               <p className="text-sm text-repetitive flex items-center gap-1.5">
                 <IconAlert size={14} className="text-repetitive" /> 内容较短，分析结果可能不够准确
               </p>

@@ -7,7 +7,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { IconCheckCircle, IconAlert, IconClose } from "@/components/Icon";
+import { IconCheckCircle, IconAlert, IconClose, IconSearch } from "@/components/Icon";
 
 type ToastType = "success" | "error" | "info";
 
@@ -35,7 +35,7 @@ export function useToast() {
 const toastConfig: Record<ToastType, { bg: string; icon: typeof IconCheckCircle }> = {
   success: { bg: "bg-effective", icon: IconCheckCircle },
   error: { bg: "bg-nonsense", icon: IconAlert },
-  info: { bg: "bg-primary", icon: IconCheckCircle },
+  info: { bg: "bg-primary", icon: IconSearch },
 };
 
 let toastIdCounter = 0;
@@ -68,12 +68,16 @@ export function ToastProvider({ children }: { children: ReactNode }) {
           return (
             <div
               key={toast.id}
-              className={`flex items-center gap-2.5 px-4 py-3 rounded-xl shadow-lg text-white text-sm font-medium pointer-events-auto ${cfg.bg}`}
-              style={{
-                animation: "toastSlideIn 0.3s ease-out",
-              }}
+              className={`flex items-center gap-2.5 px-4 py-3 rounded-xl shadow-lg text-white text-sm font-medium pointer-events-auto ${cfg.bg} ${
+                toast.type === "error" ? "toast-error-enter" : ""
+              }`}
+              style={
+                toast.type !== "error"
+                  ? { animation: "toastSlideIn 0.3s ease-out" }
+                  : undefined
+              }
             >
-              <ToastIcon size={16} className="shrink-0 opacity-90" />
+              <ToastIcon size={16} className={`shrink-0 ${toast.type === "success" ? "opacity-100" : "opacity-90"}`} />
               <span className="flex-1">{toast.message}</span>
               <button
                 onClick={() => removeToast(toast.id)}
