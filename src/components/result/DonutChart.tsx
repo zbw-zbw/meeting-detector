@@ -35,7 +35,7 @@ export default function DonutChart({ score, breakdown, mounted, scoreColor }: Do
   const [hoveredSegment, setHoveredSegment] = useState<string | null>(null);
 
   return (
-    <div className="bg-surface rounded-2xl p-6 sm:p-8 shadow-sm border border-border mb-6 fade-up">
+    <div className="bg-surface rounded-2xl p-6 sm:p-8 shadow-sm border border-border mb-6 fade-up card-gradient-border">
       <h2 className="text-lg font-bold text-text mb-6">
         <IconTrendingUp size={20} className="inline mr-2 text-primary" />
         内容结构分析

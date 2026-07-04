@@ -165,7 +165,6 @@ export default function AnalyzePage() {
         signal: controller.signal,
       });
 
-      clearTimeout(timeoutId);
       const data = await res.json();
 
       if (!res.ok) {
@@ -193,13 +192,14 @@ export default function AnalyzePage() {
         router.push("/result");
       }, 800);
     } catch (err) {
-      clearTimeout(timeoutId);
       if (err instanceof DOMException && err.name === "AbortError") {
         setError("分析超时，请缩短文本后重试");
       } else {
         setError("网络错误，请检查网络后重试");
       }
       setLoading(false);
+    } finally {
+      clearTimeout(timeoutId);
     }
   };
 
@@ -308,11 +308,17 @@ export default function AnalyzePage() {
             <textarea
               ref={textareaRef}
               value={text}
-              onChange={(e) => setText(e.target.value)}
+              onChange={(e) => {
+                setText(e.target.value);
+                const textarea = e.target;
+                textarea.style.height = "auto";
+                const newHeight = Math.min(textarea.scrollHeight, window.innerHeight * 0.6);
+                textarea.style.height = `${newHeight}px`;
+              }}
               onKeyDown={handleKeyDown}
               disabled={loading}
               placeholder={`在这里粘贴会议纪要或文字记录...\n\n支持任意格式，建议包含发言人标注以获得更准确的分析。`}
-              className="w-full min-h-[300px] sm:min-h-[400px] bg-surface rounded-2xl border border-border p-5 sm:p-6 text-text text-base leading-relaxed resize-y placeholder:text-text-muted textarea-glow focus:border-primary transition-all outline-none disabled:opacity-60 disabled:cursor-not-allowed"
+              className="w-full min-h-[300px] sm:min-h-[400px] bg-surface rounded-2xl border border-border p-5 sm:p-6 text-text text-base leading-relaxed resize-none placeholder:text-text-muted textarea-glow focus:border-primary transition-all outline-none disabled:opacity-60 disabled:cursor-not-allowed"
             />
             {isDragging && (
               <div className="absolute inset-0 bg-primary/10 backdrop-blur-sm rounded-2xl drag-active-border flex items-center justify-center z-20 pointer-events-none">

@@ -1,10 +1,11 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import Navbar from "@/components/Navbar";
 import Link from "next/link";
 import { useFadeUp } from "@/hooks/useFadeUp";
 import { useCountUp } from "@/hooks/useCountUp";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, Suspense } from "react";
 import type { AnalysisResult, ActionItem } from "@/types/analysis";
 import { useToast } from "@/components/ToastProvider";
 import { normalizeBreakdown } from "@/lib/history";
@@ -12,20 +13,31 @@ import {
   IconArrowRight, IconInbox, IconAlert,
 } from "@/components/Icon";
 
-/* ─── Sub-components ─── */
+/* ─── Sub-components (static: above-the-fold) ─── */
 import ResultSkeleton from "@/components/result/ResultSkeleton";
 import ReportHeader from "@/components/result/ReportHeader";
 import ScoreCards from "@/components/result/ScoreCards";
 import DonutChart from "@/components/result/DonutChart";
 import SentenceList from "@/components/result/SentenceList";
-import SpeakerRanking from "@/components/result/SpeakerRanking";
-import ActionItems from "@/components/result/ActionItems";
-import MeetingSummary from "@/components/result/MeetingSummary";
-import ExportActions from "@/components/result/ExportActions";
+
+/* ─── Sub-components (lazy: below-the-fold) ─── */
+const SpeakerRanking = dynamic(() => import("@/components/result/SpeakerRanking"), { ssr: false });
+const ActionItems = dynamic(() => import("@/components/result/ActionItems"), { ssr: false });
+const MeetingSummary = dynamic(() => import("@/components/result/MeetingSummary"), { ssr: false });
+const ExportActions = dynamic(() => import("@/components/result/ExportActions"), { ssr: false });
 
 /* ─── Helpers ─── */
 import { getScoreRawColor, computeSpeakerStats, computeDeepInsights } from "@/components/result/helpers";
 import type { FilterKey } from "@/components/result/helpers";
+
+/* ─── Lazy loading fallback ─── */
+const LazyFallback = () => (
+  <div className="bg-surface rounded-2xl p-6 border border-border mb-6">
+    <div className="skeleton h-6 w-40 mb-4" />
+    <div className="skeleton h-4 w-full mb-2" />
+    <div className="skeleton h-4 w-3/4" />
+  </div>
+);
 
 /* ─── page component ─── */
 
@@ -135,14 +147,24 @@ export default function ResultPage() {
         <main className="pt-24 pb-20">
           <div className="max-w-[600px] mx-auto px-4 sm:px-6 text-center">
             <div className="mb-8">
-              <div className="mb-4">
-                <IconInbox size={48} className="text-text-muted mx-auto" />
-              </div>
-              <h1 className="text-2xl sm:text-3xl font-extrabold text-text">
+              <svg width="120" height="120" viewBox="0 0 120 120" className="mx-auto mb-4" fill="none">
+                {/* Document outline */}
+                <rect x="30" y="15" width="60" height="80" rx="8" stroke="var(--border)" strokeWidth="2" fill="var(--surface)" />
+                {/* Magnifying glass */}
+                <circle cx="65" cy="50" r="15" stroke="var(--primary)" strokeWidth="2.5" opacity="0.6" />
+                <line x1="75" y1="60" x2="85" y2="70" stroke="var(--primary)" strokeWidth="2.5" strokeLinecap="round" opacity="0.6" />
+                {/* Decorative dots */}
+                <circle cx="45" cy="80" r="2" fill="var(--effective)" opacity="0.5" />
+                <circle cx="55" cy="85" r="2" fill="var(--nonsense)" opacity="0.5" />
+                <circle cx="65" cy="80" r="2" fill="var(--repetitive)" opacity="0.5" />
+                {/* Question mark */}
+                <text x="65" y="55" textAnchor="middle" fontSize="16" fontWeight="bold" fill="var(--primary)" opacity="0.6">?</text>
+              </svg>
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-text font-display">
                 还没有分析结果
               </h1>
-              <p className="text-text-secondary mt-3">
-                请先去分析一场会议内容
+              <p className="text-text-secondary mt-3 max-w-sm mx-auto">
+                粘贴一场会议的内容，AI 将为你生成详细的效率分析报告
               </p>
             </div>
             <Link
@@ -213,32 +235,40 @@ export default function ResultPage() {
           )}
 
           {/* Speaker Ranking */}
-          <SpeakerRanking speakerStats={speakerStats ?? []} />
+          <Suspense fallback={<LazyFallback />}>
+            <SpeakerRanking speakerStats={speakerStats ?? []} />
+          </Suspense>
 
           {/* Region 5: Action Items */}
-          <ActionItems
-            actionItems={result.actionItems}
-            checkedItems={checkedItems}
-            setCheckedItems={setCheckedItems}
-            onAddAction={handleAddAction}
-            showToast={showToast}
-          />
+          <Suspense fallback={<LazyFallback />}>
+            <ActionItems
+              actionItems={result.actionItems}
+              checkedItems={checkedItems}
+              setCheckedItems={setCheckedItems}
+              onAddAction={handleAddAction}
+              showToast={showToast}
+            />
+          </Suspense>
 
           {/* Region 6: Summary & Suggestions */}
-          <MeetingSummary
-            summary={result.summary}
-            keyDecisions={result.keyDecisions}
-            suggestions={result.suggestions}
-            deepInsights={deepInsights}
-          />
+          <Suspense fallback={<LazyFallback />}>
+            <MeetingSummary
+              summary={result.summary}
+              keyDecisions={result.keyDecisions}
+              suggestions={result.suggestions}
+              deepInsights={deepInsights}
+            />
+          </Suspense>
 
           {/* Region 7: Bottom Actions */}
-          <ExportActions
-            result={result}
-            copied={copied}
-            shared={shared}
-            showToast={showToast}
-          />
+          <Suspense fallback={<LazyFallback />}>
+            <ExportActions
+              result={result}
+              copied={copied}
+              shared={shared}
+              showToast={showToast}
+            />
+          </Suspense>
         </div>
       </main>
     </>

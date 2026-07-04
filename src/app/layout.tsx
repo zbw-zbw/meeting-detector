@@ -4,6 +4,7 @@ import { ToastProvider } from "@/components/ToastProvider";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import PageTransition from "@/components/PageTransition";
 import KeyboardShortcuts from "@/components/KeyboardShortcuts";
+import ScrollToTop from "@/components/ScrollToTop";
 
 export const metadata: Metadata = {
   title: "会议废话检测器 - AI 会议效率分析工具",
@@ -41,6 +42,9 @@ export default function RootLayout({
   return (
     <html lang="zh-CN" className="antialiased" suppressHydrationWarning>
       <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;600;700;900&display=swap" rel="stylesheet" />
         <script
           dangerouslySetInnerHTML={{
             __html: `try{var t=localStorage.getItem('theme');if(t!=='light'&&t!=='dark'){t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'}if(t==='dark'){document.documentElement.classList.add('dark')}}catch(e){}`,
@@ -51,6 +55,7 @@ export default function RootLayout({
         <ThemeProvider>
           <ToastProvider>
             <KeyboardShortcuts />
+            <ScrollToTop />
             <PageTransition>{children}</PageTransition>
           </ToastProvider>
         </ThemeProvider>

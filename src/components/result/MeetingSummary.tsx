@@ -24,6 +24,7 @@ export default function MeetingSummary({
           <IconBook size={20} className="inline mr-2 text-primary" />
           会议摘要
         </h2>
+        <div className="section-divider mb-4" />
         <p className="text-text-secondary leading-relaxed">
           {summary}
         </p>
@@ -78,6 +79,7 @@ export default function MeetingSummary({
             <IconLightbulb size={20} className="inline mr-2 text-primary" />
             改进建议
           </h2>
+          <div className="section-divider mb-4" />
           <div>
             {suggestions.map((suggestion, i) => (
               <div

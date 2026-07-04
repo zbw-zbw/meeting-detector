@@ -120,9 +120,16 @@ export default function HistoryPage() {
           {/* Empty State */}
           {!loading && history.length === 0 && (
             <div className="flex flex-col items-center justify-center py-20 text-center fade-up">
-              <div className="text-text-muted mx-auto">
-                <IconInbox size={48} />
-              </div>
+              <svg width="120" height="120" viewBox="0 0 120 120" className="mx-auto mb-4" fill="none">
+                {/* Clock outline */}
+                <circle cx="60" cy="55" r="30" stroke="var(--border)" strokeWidth="2" />
+                <line x1="60" y1="55" x2="60" y2="38" stroke="var(--primary)" strokeWidth="2.5" strokeLinecap="round" />
+                <line x1="60" y1="55" x2="72" y2="60" stroke="var(--primary)" strokeWidth="2.5" strokeLinecap="round" />
+                {/* Base */}
+                <line x1="40" y1="95" x2="80" y2="95" stroke="var(--border)" strokeWidth="2" strokeLinecap="round" />
+                {/* Plus button */}
+                <circle cx="60" cy="55" r="38" stroke="var(--primary)" strokeWidth="1.5" strokeDasharray="4 4" opacity="0.3" />
+              </svg>
               <h2 className="text-2xl font-extrabold text-text mt-4">
                 还没有分析记录
               </h2>

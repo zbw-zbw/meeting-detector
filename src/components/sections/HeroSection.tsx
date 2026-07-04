@@ -61,7 +61,7 @@ export default function HeroSection() {
           </p>
 
           {/* Title with special "废话" treatment */}
-          <h1 className="text-5xl sm:text-6xl font-extrabold text-text mt-5 leading-[1.05] tracking-tight">
+          <h1 className="text-5xl sm:text-6xl font-extrabold text-text mt-5 leading-[1.05] tracking-tight font-display">
             会议<span className="hero-nonsense-word">废话</span>检测器
           </h1>
 
@@ -79,7 +79,7 @@ export default function HeroSection() {
                 className={`${card.bg} rounded-xl px-3 py-3 text-center`}
               >
                 <div className="flex justify-center mb-1.5">{card.icon}</div>
-                <p className={`text-lg font-bold ${card.color}`}>{card.value}</p>
+                <p className={`text-lg font-bold ${card.color} number-highlight`}>{card.value}</p>
                 <p className="text-[11px] text-text-muted mt-0.5 leading-tight">
                   {card.label}
                 </p>

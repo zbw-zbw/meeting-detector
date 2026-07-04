@@ -61,7 +61,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     <ToastContext.Provider value={{ showToast }}>
       {children}
       {/* Toast Container */}
-      <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[100] flex flex-col gap-2 w-full max-w-sm px-4 pointer-events-none">
+      <div className="fixed top-4 right-4 z-[100] flex flex-col gap-2 w-full max-w-sm pointer-events-none">
         {toasts.map((toast) => {
           const cfg = toastConfig[toast.type];
           const ToastIcon = cfg.icon;
@@ -73,7 +73,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               }`}
               style={
                 toast.type !== "error"
-                  ? { animation: "toastSlideIn 0.3s ease-out" }
+                  ? { animation: "toastSlideInRight 0.3s ease-out" }
                   : undefined
               }
             >

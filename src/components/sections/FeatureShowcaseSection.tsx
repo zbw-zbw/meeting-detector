@@ -38,7 +38,7 @@ export default function FeatureShowcaseSection() {
 
           {/* Integrated analysis panel */}
           <div className="lg:col-span-8">
-            <div className="bg-surface border border-border rounded-2xl overflow-hidden">
+            <div className="bg-surface border border-border rounded-2xl overflow-hidden card-gradient-border">
               <div className="grid grid-cols-1 md:grid-cols-5">
                 {/* Sentences */}
                 <div className="md:col-span-3 p-5 space-y-3.5 md:border-r md:border-border-light">
@@ -154,7 +154,7 @@ export default function FeatureShowcaseSection() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center mt-20 fade-up">
           {/* Mockup */}
           <div className="lg:col-span-7 lg:order-1">
-            <div className="bg-surface border border-border rounded-2xl p-5">
+            <div className="bg-surface border border-border rounded-2xl p-5 card-gradient-border">
               <p className="text-xs font-semibold text-text-secondary mb-3">
                 提取到 3 项行动项
               </p>
@@ -215,7 +215,7 @@ export default function FeatureShowcaseSection() {
           </div>
           <div className="lg:col-span-7">
             {/* Mini comparison mockup */}
-            <div className="bg-surface border border-border rounded-2xl p-5">
+            <div className="bg-surface border border-border rounded-2xl p-5 card-gradient-border">
               <div className="grid grid-cols-2 gap-4">
                 {/* Meeting 1 */}
                 <div className="text-center p-4 bg-bg rounded-xl stagger-item" style={{ animationDelay: "0.1s" }}>

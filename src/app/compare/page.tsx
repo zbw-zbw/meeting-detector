@@ -86,12 +86,33 @@ export default function ComparePage() {
           {/* Empty state */}
           {items.length === 0 && (
             <div className="text-center py-16 fade-up">
-              <div className="mb-4 relative inline-block">
-                <IconChart size={48} className="text-text-muted mx-auto animate-pulse" />
+              <div className="mb-4">
+                <svg width="120" height="120" viewBox="0 0 120 120" className="mx-auto mb-4" fill="none">
+                  {/* Two document outlines side by side */}
+                  <rect x="20" y="20" width="40" height="55" rx="6" stroke="var(--border)" strokeWidth="2" fill="var(--surface)" />
+                  <rect x="60" y="25" width="40" height="55" rx="6" stroke="var(--border)" strokeWidth="2" fill="var(--surface)" />
+                  {/* Comparison arrows between documents */}
+                  <line x1="44" y1="45" x2="56" y2="45" stroke="var(--primary)" strokeWidth="2" strokeLinecap="round" opacity="0.6" />
+                  <polyline points="53,41 57,45 53,49" stroke="var(--primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity="0.6" fill="none" />
+                  <line x1="56" y1="55" x2="44" y2="55" stroke="var(--effective)" strokeWidth="2" strokeLinecap="round" opacity="0.6" />
+                  <polyline points="47,51 43,55 47,59" stroke="var(--effective)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity="0.6" fill="none" />
+                  {/* Decorative bars in left document */}
+                  <rect x="26" y="30" width="18" height="3" rx="1.5" fill="var(--primary)" opacity="0.3" />
+                  <rect x="26" y="37" width="24" height="3" rx="1.5" fill="var(--border)" opacity="0.5" />
+                  <rect x="26" y="44" width="14" height="3" rx="1.5" fill="var(--border)" opacity="0.5" />
+                  {/* Decorative bars in right document */}
+                  <rect x="66" y="35" width="18" height="3" rx="1.5" fill="var(--primary)" opacity="0.3" />
+                  <rect x="66" y="42" width="24" height="3" rx="1.5" fill="var(--border)" opacity="0.5" />
+                  <rect x="66" y="49" width="14" height="3" rx="1.5" fill="var(--border)" opacity="0.5" />
+                  {/* Bottom hint dots */}
+                  <circle cx="45" cy="95" r="2.5" fill="var(--primary)" opacity="0.3" />
+                  <circle cx="60" cy="95" r="2.5" fill="var(--effective)" opacity="0.4" />
+                  <circle cx="75" cy="95" r="2.5" fill="var(--nonsense)" opacity="0.3" />
+                </svg>
               </div>
               <h2 className="text-xl font-bold text-text mb-2">暂无对比项目</h2>
               <p className="text-text-secondary mb-6">
-                在历史记录页面点击&ldquo;加入对比&rdquo;来添加会议
+                在历史记录页面点击&ldquo;对比&rdquo;来添加会议
               </p>
               {/* Step guide */}
               <div className="max-w-sm mx-auto mb-8 space-y-4 text-left">

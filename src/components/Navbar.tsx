@@ -10,6 +10,7 @@ const navItems = [
   { label: "首页", href: "/" },
   { label: "开始分析", href: "/analyze", isPrimary: true },
   { label: "历史记录", href: "/history" },
+  { label: "数据统计", href: "/stats" },
   { label: "设置", href: "/settings" },
 ];
 
@@ -114,7 +115,7 @@ export default function Navbar() {
 
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-50 bg-surface/80 backdrop-blur-md border-b border-border transition-shadow duration-300 ${
+      className={`fixed top-0 left-0 right-0 z-50 bg-surface/80 backdrop-blur-md border-b border-border transition-shadow duration-300 navbar-gradient ${
         scrolled ? "shadow-sm" : ""
       }`}
     >
@@ -122,7 +123,7 @@ export default function Navbar() {
         {/* Logo */}
         <Link
           href="/"
-          className="flex items-center gap-2 font-bold text-text text-lg shrink-0"
+          className="flex items-center gap-2 font-bold text-text text-lg shrink-0 font-display"
         >
           <IconChart size={24} className="text-primary" />
           <span className="hidden sm:inline">会议废话检测器</span>

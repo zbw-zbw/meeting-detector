@@ -38,7 +38,7 @@ export default function ReportHeader({ result, handleShare, shared }: ReportHead
         </div>
       </div>
       {/* title */}
-      <h1 className="text-2xl sm:text-3xl font-extrabold text-text mt-4">
+      <h1 className="text-2xl sm:text-3xl font-extrabold text-text mt-4 font-display">
         <IconChart size={24} className="inline text-primary mr-2" />
         会议效率报告
       </h1>
