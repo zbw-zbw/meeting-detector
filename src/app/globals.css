@@ -311,6 +311,11 @@ h1, h2, .font-display {
     animation: none;
     display: none;
   }
+  .confetti-piece,
+  .score-burst,
+  .score-celebrate {
+    animation: none;
+  }
   .page-loading {
     animation: none;
     opacity: 1;
@@ -355,6 +360,15 @@ h1, h2, .font-display {
   .checkmark-circle,
   .checkmark-check {
     animation: none;
+    stroke-dashoffset: 0;
+  }
+  .chart-bar-animated,
+  .chart-pie-animated,
+  .chart-line-animated,
+  .chart-dot-animated {
+    animation: none;
+    opacity: 1;
+    transform: none;
     stroke-dashoffset: 0;
   }
   * {
@@ -469,6 +483,45 @@ h1, h2, .font-display {
   background: radial-gradient(circle, var(--primary) 0%, transparent 70%);
   animation: scoreFlash 1.2s ease-out 0.3s both;
   pointer-events: none;
+}
+
+/* ========== Score Celebration Confetti ========== */
+@keyframes confettiFall {
+  0% {
+    transform: translateY(-100vh) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100vh) rotate(720deg);
+    opacity: 0;
+  }
+}
+
+.confetti-piece {
+  position: fixed;
+  width: 10px;
+  height: 10px;
+  top: 0;
+  z-index: 9999;
+  pointer-events: none;
+  animation: confettiFall 3s linear forwards;
+}
+
+@keyframes scoreBurst {
+  0% { transform: scale(0.5); opacity: 0; }
+  50% { transform: scale(1.1); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+.score-burst {
+  animation: scoreBurst 0.6s ease-out 0.3s both;
+}
+
+@keyframes glowPulse {
+  0%, 100% { box-shadow: 0 0 20px rgba(16, 185, 129, 0.2); }
+  50% { box-shadow: 0 0 40px rgba(16, 185, 129, 0.4); }
+}
+.score-celebrate {
+  animation: glowPulse 2s ease-in-out infinite;
 }
 
 /* ========== Toast Animations ========== */
@@ -601,6 +654,51 @@ h1, h2, .font-display {
 .score-bar-animated {
   transform-origin: left;
   animation: barExpand 0.6s ease-out 0.2s both;
+}
+
+/* ========== Chart Entrance Animations ========== */
+@keyframes barGrowUp {
+  from { transform: scaleY(0); opacity: 0; }
+  to { transform: scaleY(1); opacity: 0.85; }
+}
+.chart-bar-animated {
+  transform-origin: bottom;
+  animation: barGrowUp 0.6s ease-out both;
+}
+.chart-bar-animated:nth-child(1) { animation-delay: 0.1s; }
+.chart-bar-animated:nth-child(2) { animation-delay: 0.2s; }
+.chart-bar-animated:nth-child(3) { animation-delay: 0.3s; }
+.chart-bar-animated:nth-child(4) { animation-delay: 0.4s; }
+.chart-bar-animated:nth-child(5) { animation-delay: 0.5s; }
+
+@keyframes pieSliceDraw {
+  from { opacity: 0; transform: scale(0.8); }
+  to { opacity: 0.85; transform: scale(1); }
+}
+.chart-pie-animated {
+  transform-origin: center;
+  animation: pieSliceDraw 0.5s ease-out both;
+}
+.chart-pie-animated:nth-child(1) { animation-delay: 0.2s; }
+.chart-pie-animated:nth-child(2) { animation-delay: 0.35s; }
+.chart-pie-animated:nth-child(3) { animation-delay: 0.5s; }
+
+@keyframes lineDrawProgress {
+  from { stroke-dashoffset: 1000; }
+  to { stroke-dashoffset: 0; }
+}
+.chart-line-animated {
+  stroke-dasharray: 1000;
+  animation: lineDrawProgress 1.2s ease-out 0.3s both;
+}
+
+@keyframes dotPopIn {
+  from { opacity: 0; transform: scale(0); }
+  to { opacity: 1; transform: scale(1); }
+}
+.chart-dot-animated {
+  transform-origin: center;
+  animation: dotPopIn 0.3s ease-out both;
 }
 
 /* ========== Marching Ants (Drag Active Border) ========== */

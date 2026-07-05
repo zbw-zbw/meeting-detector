@@ -1,13 +1,14 @@
 "use client";
 
 import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 import Link from "next/link";
 import { useEffect, useState, useMemo } from "react";
 import { useFadeUp } from "@/hooks/useFadeUp";
 import { getHistory, formatHistoryDate, getScoreBgClass } from "@/lib/history";
 import type { HistoryItem } from "@/lib/history";
 import type { ContentType, SentenceAnalysis } from "@/types/analysis";
-import { IconInbox, IconTrophy, IconAlert, IconArrowRight } from "@/components/Icon";
+import { IconTrophy, IconAlert, IconArrowRight } from "@/components/Icon";
 
 /* ─── Types ─── */
 
@@ -128,6 +129,7 @@ function BarChart({ buckets }: { buckets: ScoreBucket[] }) {
               ry={6}
               fill={fillColor}
               opacity={0.85}
+              className="chart-bar-animated"
             />
             {/* Count on top */}
             {bucket.count > 0 && (
@@ -234,12 +236,22 @@ function TrendLine({ points }: { points: TrendPoint[] }) {
         strokeWidth={2.5}
         strokeLinecap="round"
         strokeLinejoin="round"
+        className="chart-line-animated"
       />
 
       {/* Data points + labels */}
       {coords.map((c, i) => (
         <g key={i}>
-          <circle cx={c.x} cy={c.y} r={4} fill="var(--color-nonsense)" stroke="var(--color-surface)" strokeWidth={2} />
+          <circle
+            cx={c.x}
+            cy={c.y}
+            r={4}
+            fill="var(--color-nonsense)"
+            stroke="var(--color-surface)"
+            strokeWidth={2}
+            className="chart-dot-animated"
+            style={{ animationDelay: `${0.4 + i * 0.1}s` }}
+          />
           {c.nonsenseRate > 0 && (
             <text
               x={c.x}
@@ -311,6 +323,7 @@ function PieChart({ distribution }: { distribution: TypeDistribution[] }) {
               opacity={0.85}
               stroke="var(--color-surface)"
               strokeWidth={2}
+              className="chart-pie-animated"
             />
           );
         })}
@@ -490,9 +503,20 @@ export default function StatsPage() {
           <div className="max-w-[600px] mx-auto px-4 sm:px-6 text-center">
             <div className="mb-8">
               <div className="mb-4">
-                <IconInbox size={48} className="text-text-muted mx-auto" />
+                <svg width="120" height="120" viewBox="0 0 120 120" className="mx-auto mb-4" fill="none">
+                  {/* Bar chart outline */}
+                  <rect x="25" y="60" width="14" height="35" rx="3" stroke="var(--border)" strokeWidth="2" fill="var(--surface)" />
+                  <rect x="45" y="40" width="14" height="55" rx="3" stroke="var(--border)" strokeWidth="2" fill="var(--surface)" />
+                  <rect x="65" y="25" width="14" height="70" rx="3" stroke="var(--primary)" strokeWidth="2" fill="var(--primary)" fillOpacity="0.1" />
+                  <rect x="85" y="50" width="14" height="45" rx="3" stroke="var(--border)" strokeWidth="2" fill="var(--surface)" />
+                  {/* Base line */}
+                  <line x1="20" y1="95" x2="105" y2="95" stroke="var(--border)" strokeWidth="2" strokeLinecap="round" />
+                  {/* Decorative dots */}
+                  <circle cx="72" cy="20" r="3" fill="var(--primary)" opacity="0.4" />
+                  <circle cx="55" cy="15" r="2" fill="var(--effective)" opacity="0.3" />
+                </svg>
               </div>
-              <h1 className="text-2xl sm:text-3xl font-extrabold text-text">
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-text font-display">
                 暂无统计数据
               </h1>
               <p className="text-text-secondary mt-3">
@@ -507,6 +531,7 @@ export default function StatsPage() {
             </Link>
           </div>
         </main>
+        <Footer />
       </>
     );
   }
@@ -527,7 +552,7 @@ export default function StatsPage() {
 
           {/* Title */}
           <div className="mb-8 fade-up">
-            <h1 className="text-3xl sm:text-4xl font-extrabold text-text">
+            <h1 className="text-3xl sm:text-4xl font-extrabold text-text font-display">
               数据统计总览
             </h1>
             <div className="mt-3 mb-3 h-px w-20 bg-gradient-to-r from-primary via-primary-light to-transparent rounded-full" />
@@ -541,7 +566,7 @@ export default function StatsPage() {
             {/* Total analyses */}
             <div className="bg-surface rounded-2xl p-5 border border-border shadow-sm">
               <p className="text-sm text-text-secondary mb-1">总分析次数</p>
-              <p className="text-3xl font-extrabold text-primary">
+              <p className="text-3xl font-extrabold text-primary number-highlight">
                 {summary.totalAnalyses}
               </p>
               <p className="text-xs text-text-muted mt-1">场会议已分析</p>
@@ -550,7 +575,7 @@ export default function StatsPage() {
             {/* Average score */}
             <div className="bg-surface rounded-2xl p-5 border border-border shadow-sm">
               <p className="text-sm text-text-secondary mb-1">平均效率分</p>
-              <p className="text-3xl font-extrabold text-text">
+              <p className="text-3xl font-extrabold text-text number-highlight">
                 {summary.avgScore}
                 <span className="text-base font-medium text-text-muted ml-1">分</span>
               </p>
@@ -566,7 +591,7 @@ export default function StatsPage() {
             {/* Total sentences */}
             <div className="bg-surface rounded-2xl p-5 border border-border shadow-sm">
               <p className="text-sm text-text-secondary mb-1">总分析句数</p>
-              <p className="text-3xl font-extrabold text-text">
+              <p className="text-3xl font-extrabold text-text number-highlight">
                 {summary.totalSentences.toLocaleString()}
               </p>
               <p className="text-xs text-text-muted mt-1">句逐句分析</p>
@@ -575,7 +600,7 @@ export default function StatsPage() {
             {/* Total action items */}
             <div className="bg-surface rounded-2xl p-5 border border-border shadow-sm">
               <p className="text-sm text-text-secondary mb-1">总行动项数</p>
-              <p className="text-3xl font-extrabold text-effective">
+              <p className="text-3xl font-extrabold text-effective number-highlight">
                 {summary.totalActionItems}
               </p>
               <p className="text-xs text-text-muted mt-1">个待办事项</p>
@@ -586,7 +611,7 @@ export default function StatsPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8 fade-up">
             {/* Score Distribution Bar Chart */}
             <div className="bg-surface rounded-2xl p-6 border border-border shadow-sm">
-              <h2 className="text-lg font-bold text-text mb-4">效率分布</h2>
+              <h2 className="text-lg font-bold text-text font-display mb-4">效率分布</h2>
               <p className="text-sm text-text-secondary mb-4">
                 按分数区间统计会议效率分布情况
               </p>
@@ -597,7 +622,7 @@ export default function StatsPage() {
 
             {/* Nonsense Rate Trend */}
             <div className="bg-surface rounded-2xl p-6 border border-border shadow-sm">
-              <h2 className="text-lg font-bold text-text mb-4">废话率趋势</h2>
+              <h2 className="text-lg font-bold text-text font-display mb-4">废话率趋势</h2>
               <p className="text-sm text-text-secondary mb-4">
                 最近 {trendPoints.length} 次分析的废话率变化
               </p>
@@ -609,7 +634,7 @@ export default function StatsPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8 fade-up">
             {/* Content Type Pie Chart */}
             <div className="bg-surface rounded-2xl p-6 border border-border shadow-sm">
-              <h2 className="text-lg font-bold text-text mb-4">内容类型分布</h2>
+              <h2 className="text-lg font-bold text-text font-display mb-4">内容类型分布</h2>
               <p className="text-sm text-text-secondary mb-4">
                 所有分析句子的内容类型占比
               </p>
@@ -618,7 +643,7 @@ export default function StatsPage() {
 
             {/* Placeholder / additional info */}
             <div className="bg-surface rounded-2xl p-6 border border-border shadow-sm">
-              <h2 className="text-lg font-bold text-text mb-4">数据洞察</h2>
+              <h2 className="text-lg font-bold text-text font-display mb-4">数据洞察</h2>
               <div className="space-y-4">
                 <div className="flex items-start gap-3">
                   <div className="w-8 h-8 rounded-lg bg-effective/10 flex items-center justify-center shrink-0">
@@ -671,7 +696,7 @@ export default function StatsPage() {
             <div className="bg-surface rounded-2xl p-6 border border-border shadow-sm">
               <div className="flex items-center gap-2 mb-4">
                 <IconTrophy size={18} className="text-effective" />
-                <h2 className="text-lg font-bold text-text">最佳会议 Top 3</h2>
+                <h2 className="text-lg font-bold text-text font-display">最佳会议 Top 3</h2>
               </div>
               <div className="space-y-3">
                 {rankedMeetings.best.length > 0 ? (
@@ -697,7 +722,7 @@ export default function StatsPage() {
             <div className="bg-surface rounded-2xl p-6 border border-border shadow-sm">
               <div className="flex items-center gap-2 mb-4">
                 <IconAlert size={18} className="text-nonsense" />
-                <h2 className="text-lg font-bold text-text">最差会议 Top 3</h2>
+                <h2 className="text-lg font-bold text-text font-display">最差会议 Top 3</h2>
               </div>
               <div className="space-y-3">
                 {rankedMeetings.worst.length > 0 ? (
@@ -721,6 +746,7 @@ export default function StatsPage() {
           </div>
         </div>
       </main>
+      <Footer />
     </>
   );
 }

@@ -3,12 +3,12 @@
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useFadeUp } from "@/hooks/useFadeUp";
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/components/ToastProvider";
 import { saveToHistory } from "@/lib/history";
-import { IconClipboard, IconCalendar, IconLightbulb, IconSearch, IconAlert, IconFileText, IconClose, IconCheckCircle } from "@/components/Icon";
+import { IconClipboard, IconCalendar, IconLightbulb, IconSearch, IconAlert, IconFileText, IconClose, IconCheckCircle, IconClock, IconUsers, IconBook } from "@/components/Icon";
 
 const EXAMPLES: Record<string, string> = {
   planning: `会议主题：Q3产品规划讨论会
@@ -119,11 +119,36 @@ export default function AnalyzePage() {
   const fillExample = useCallback((key: string) => {
     if (loading) return;
     setText(EXAMPLES[key]);
+    // Adjust height after content changes
+    requestAnimationFrame(() => {
+      if (textareaRef.current) {
+        textareaRef.current.style.height = "auto";
+        const newHeight = Math.min(textareaRef.current.scrollHeight, window.innerHeight * 0.6);
+        textareaRef.current.style.height = `${newHeight}px`;
+      }
+    });
     textareaRef.current?.focus();
   }, [loading]);
 
   const charCount = text.length;
   const canAnalyze = text.trim().length >= 10 && !loading;
+
+  // 检测到的发言人列表
+  const detectedSpeakers = useMemo<string[]>(() => {
+    if (charCount < 10) return [];
+    // Match patterns like "张总：" "李经理：" "小陈：" etc.
+    const speakerPattern = /([^\s:：]{2,4})[：:]/g;
+    const speakers = new Set<string>();
+    let match: RegExpExecArray | null;
+    while ((match = speakerPattern.exec(text)) !== null) {
+      // Filter out common false positives
+      const name = match[1];
+      if (name.length >= 2 && name.length <= 4 && /[\u4e00-\u9fff]/.test(name)) {
+        speakers.add(name);
+      }
+    }
+    return Array.from(speakers).slice(0, 10); // max 10 speakers
+  }, [text, charCount]);
 
   // 加载步骤动画
   useEffect(() => {
@@ -230,6 +255,14 @@ export default function AnalyzePage() {
           const content = ev.target?.result as string;
           if (content) {
             setText(content);
+            // Adjust height after content changes
+            requestAnimationFrame(() => {
+              if (textareaRef.current) {
+                textareaRef.current.style.height = "auto";
+                const newHeight = Math.min(textareaRef.current.scrollHeight, window.innerHeight * 0.6);
+                textareaRef.current.style.height = `${newHeight}px`;
+              }
+            });
             showToast("文件内容已加载", "success");
           }
         };
@@ -246,6 +279,14 @@ export default function AnalyzePage() {
       const clipText = await navigator.clipboard.readText();
       if (clipText) {
         setText(clipText);
+        // Adjust height
+        requestAnimationFrame(() => {
+          if (textareaRef.current) {
+            textareaRef.current.style.height = "auto";
+            const newHeight = Math.min(textareaRef.current.scrollHeight, window.innerHeight * 0.6);
+            textareaRef.current.style.height = `${newHeight}px`;
+          }
+        });
         showToast("已粘贴剪贴板内容", "success");
         textareaRef.current?.focus();
       } else {
@@ -259,6 +300,10 @@ export default function AnalyzePage() {
   const handleClear = useCallback(() => {
     if (loading) return;
     setText("");
+    // Reset textarea height
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+    }
     textareaRef.current?.focus();
     setClearedFeedback(true);
     setTimeout(() => setClearedFeedback(false), 1500);
@@ -430,6 +475,34 @@ export default function AnalyzePage() {
             )}
           </div>
 
+          {/* Real-time estimation panel */}
+          {charCount > 10 && !loading && (
+            <div className="mt-3 flex flex-wrap items-center gap-4 text-xs text-text-muted fade-up">
+              {/* Estimated analysis time */}
+              <span className="flex items-center gap-1">
+                <IconClock size={12} className="text-primary" />
+                预计分析时长 {Math.max(10, Math.min(30, Math.round(charCount / 50)))}s
+              </span>
+              {/* Estimated sentence count */}
+              <span className="flex items-center gap-1">
+                <IconFileText size={12} className="text-primary" />
+                预计 {Math.max(1, Math.round(charCount / 35))} 句分析
+              </span>
+              {/* Speaker detection */}
+              {detectedSpeakers.length > 0 && (
+                <span className="flex items-center gap-1">
+                  <IconUsers size={12} className="text-primary" />
+                  检测到 {detectedSpeakers.length} 位发言人
+                </span>
+              )}
+              {/* Reading time */}
+              <span className="flex items-center gap-1">
+                <IconBook size={12} className="text-primary" />
+                阅读时长 {Math.max(1, Math.round(charCount / 400))}min
+              </span>
+            </div>
+          )}
+
           {/* Toolbar */}
           <div className="mt-3 flex items-center justify-between fade-up">
             <div className="inline-flex items-center gap-1 bg-surface border border-border rounded-xl p-1">
@@ -453,7 +526,12 @@ export default function AnalyzePage() {
               )}
             </div>
             <div className="flex items-center gap-3">
-              <span className={`text-sm transition-colors ${charCount > 0 ? "text-text-secondary" : "text-text-muted"}`}>
+              <span className={`text-sm transition-colors flex items-center gap-1.5 ${charCount > 0 ? "text-text-secondary" : "text-text-muted"}`}>
+                <span className={`w-2 h-2 rounded-full ${
+                  charCount === 0 ? "bg-border" :
+                  charCount < 10 ? "bg-nonsense" :
+                  charCount < 200 ? "bg-repetitive" : "bg-effective"
+                }`} />
                 {charCount} 字
               </span>
               {charCount > 200 && (

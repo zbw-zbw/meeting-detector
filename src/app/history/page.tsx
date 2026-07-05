@@ -111,11 +111,7 @@ export default function HistoryPage() {
           </div>
 
           {/* Loading State */}
-          {loading && (
-            <div className="flex justify-center items-center py-20">
-              <div className="w-12 h-12 rounded-full border-4 border-border-light border-t-primary animate-spin" />
-            </div>
-          )}
+          {loading && <HistorySkeleton />}
 
           {/* Empty State */}
           {!loading && history.length === 0 && (
@@ -579,6 +575,38 @@ function ComparePrompt() {
       <Link href="/compare" className="text-sm text-primary font-medium hover:underline">
         查看对比
       </Link>
+    </div>
+  );
+}
+
+function HistorySkeleton() {
+  return (
+    <div className="space-y-4">
+      {/* Stats overview skeleton */}
+      <div className="bg-primary/5 rounded-2xl p-6 border border-primary/10">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="text-center bg-surface/50 rounded-xl p-3">
+              <div className="skeleton h-8 w-12 mx-auto mb-2" />
+              <div className="skeleton h-3 w-16 mx-auto" />
+            </div>
+          ))}
+        </div>
+      </div>
+      {/* History card skeletons */}
+      {[1, 2, 3].map((i) => (
+        <div key={i} className="bg-surface rounded-2xl p-5 border-l-[3px] border-l-border">
+          <div className="flex items-center gap-4">
+            <div className="skeleton w-16 h-16 rounded-2xl shrink-0" />
+            <div className="flex-1 space-y-2">
+              <div className="skeleton h-4 w-48" />
+              <div className="skeleton h-3 w-32" />
+              <div className="skeleton h-3 w-24" />
+            </div>
+            <div className="skeleton w-[120px] h-2 rounded-full" />
+          </div>
+        </div>
+      ))}
     </div>
   );
 }

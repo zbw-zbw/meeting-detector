@@ -12,6 +12,7 @@ import { normalizeBreakdown } from "@/lib/history";
 import {
   IconArrowRight, IconInbox, IconAlert,
 } from "@/components/Icon";
+import Confetti from "@/components/Confetti";
 
 /* ─── Sub-components (static: above-the-fold) ─── */
 import ResultSkeleton from "@/components/result/ResultSkeleton";
@@ -182,6 +183,7 @@ export default function ResultPage() {
   const score = result.score;
   const scoreColor = getScoreRawColor(score);
   const bd = result.breakdown ?? { effective: 0, repetitive: 0, nonsense: 0 };
+  const isHighScore = score >= 80;
 
   /* speaker efficiency aggregation */
   const speakerStats = computeSpeakerStats(result);
@@ -192,6 +194,7 @@ export default function ResultPage() {
   return (
     <>
       <Navbar />
+      {isHighScore && <Confetti active={true} />}
       <main className="pt-24 pb-20">
         <div className="max-w-[960px] mx-auto px-4 sm:px-6">
 
@@ -208,6 +211,7 @@ export default function ResultPage() {
             animRepetitive={animRepetitive}
             animNonsense={animNonsense}
             mounted={mounted}
+            className={isHighScore ? "score-celebrate" : ""}
           />
 
           {/* Region 3: Content Structure Analysis */}

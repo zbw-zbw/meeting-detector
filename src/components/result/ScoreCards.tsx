@@ -14,15 +14,17 @@ interface ScoreCardsProps {
   animRepetitive: number;
   animNonsense: number;
   mounted: boolean;
+  className?: string;
 }
 
 export default function ScoreCards({
   score, level, levelLabel,
   animScore, animEffective, animRepetitive, animNonsense,
   mounted,
+  className,
 }: ScoreCardsProps) {
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <div className={`grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6 ${className ?? ""}`}>
 
       {/* Card 1 -- Efficiency Score */}
       <div className={`relative bg-surface rounded-2xl p-6 shadow-sm border border-border overflow-hidden fade-up score-pulse score-card-hover ${
