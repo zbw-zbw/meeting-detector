@@ -371,6 +371,19 @@ h1, h2, .font-display {
     transform: none;
     stroke-dashoffset: 0;
   }
+  .card-enter {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  .ripple-btn:active::after {
+    animation: none;
+  }
   * {
     transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;
@@ -957,4 +970,84 @@ a, button, input, textarea, select {
   background: linear-gradient(to right, var(--primary), var(--effective));
   border-radius: 2px;
   margin: 0 auto;
+}
+
+/* ========== Button Click Ripple ========== */
+@keyframes ripple {
+  to {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+.ripple-btn {
+  position: relative;
+  overflow: hidden;
+}
+.ripple-btn::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 5px;
+  height: 5px;
+  background: rgba(255, 255, 255, 0.5);
+  opacity: 0;
+  border-radius: 100%;
+  transform: scale(1) translate(-50%, -50%);
+  transform-origin: center;
+}
+.ripple-btn:active::after {
+  animation: ripple 0.6s ease-out;
+}
+
+/* ========== Link Hover Underline ========== */
+.link-underline {
+  position: relative;
+}
+.link-underline::after {
+  content: "";
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 1.5px;
+  background: var(--primary);
+  transition: width 0.2s ease;
+}
+.link-underline:hover::after {
+  width: 100%;
+}
+
+/* ========== Card Stagger Entrance ========== */
+@keyframes cardEnter {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+.card-enter {
+  animation: cardEnter 0.4s ease-out both;
+}
+
+/* ========== Scroll Reveal ========== */
+.reveal {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+.reveal.revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
 }

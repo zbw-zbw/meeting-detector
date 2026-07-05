@@ -4,7 +4,7 @@ import { IconClock, IconFileEdit, IconLinkBroken } from "@/components/Icon";
 
 export default function PainPointsSection() {
   return (
-    <section className="py-24 border-t border-border-light">
+    <section className="py-24 border-t border-border-light reveal">
       <div className="max-w-[1200px] mx-auto px-4 sm:px-6 fade-up">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16">
           {/* Left: Section label */}

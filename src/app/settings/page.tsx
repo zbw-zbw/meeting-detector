@@ -137,7 +137,7 @@ export default function SettingsPage() {
   return (
     <>
       <Navbar />
-      <main className="pt-24 pb-20">
+      <main id="main-content" className="pt-24 pb-20">
         <div className="max-w-[640px] mx-auto px-4 sm:px-6">
           {/* Back link */}
           <nav className="flex items-center gap-2 text-sm text-text-muted mb-6">
@@ -177,6 +177,7 @@ export default function SettingsPage() {
                       setSavedKey(false);
                       setTestResult(null);
                     }}
+                    aria-label="DeepSeek API Key"
                     placeholder="sk-xxxxxxxxxxxxxxxxxxxxxxxx"
                     className="w-full px-4 py-3 pr-12 bg-bg border border-border rounded-xl text-text text-sm placeholder:text-text-muted focus:border-primary focus:outline-none transition-colors"
                   />
@@ -207,12 +208,15 @@ export default function SettingsPage() {
                   <button
                     onClick={handleTestKey}
                     disabled={testing || apiKey.trim().length === 0}
+                    aria-label="测试 API Key 连接"
                     className="inline-flex items-center gap-1.5 px-4 py-2 bg-bg border border-border text-text-secondary text-sm font-medium rounded-lg hover:border-primary hover:text-primary transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                   >
                     {testing ? (
-                      <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
-                        <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeDasharray="60 20" />
-                      </svg>
+                      <span className="flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-current animate-bounce" style={{ animationDelay: "0ms" }} />
+                        <span className="w-1.5 h-1.5 rounded-full bg-current animate-bounce" style={{ animationDelay: "150ms" }} />
+                        <span className="w-1.5 h-1.5 rounded-full bg-current animate-bounce" style={{ animationDelay: "300ms" }} />
+                      </span>
                     ) : (
                       <IconPalette size={14} />
                     )}

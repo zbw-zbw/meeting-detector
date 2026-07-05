@@ -10,6 +10,7 @@ const navItems = [
   { label: "首页", href: "/" },
   { label: "开始分析", href: "/analyze", isPrimary: true },
   { label: "历史记录", href: "/history" },
+  { label: "模板库", href: "/templates" },
   { label: "数据统计", href: "/stats" },
   { label: "设置", href: "/settings" },
 ];
@@ -157,7 +158,7 @@ export default function Navbar() {
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors relative ${
                     isActive
                       ? "text-primary"
-                      : "text-text-secondary hover:text-text hover:bg-surface"
+                      : "text-text-secondary hover:text-text hover:bg-surface link-underline"
                   }`}
                 >
                   {item.label === "设置" && <IconSettings size={14} className="inline mr-1 -mt-0.5" />}
@@ -179,11 +180,17 @@ export default function Navbar() {
               onClick={() => setShowThemePicker((v) => !v)}
               className="p-2 rounded-lg text-text-secondary hover:text-primary hover:bg-surface transition-all"
               title="切换主题色"
+              aria-label="切换主题色"
+              aria-expanded={showThemePicker}
+              aria-controls="theme-color-picker"
             >
               <IconPalette size={18} />
             </button>
             {showThemePicker && (
-              <div className="absolute right-0 top-full mt-2 bg-surface border border-border rounded-xl shadow-lg p-2 z-50 flex gap-1.5">
+              <div
+                id="theme-color-picker"
+                className="absolute right-0 top-full mt-2 bg-surface border border-border rounded-xl shadow-lg p-2 z-50 flex gap-1.5"
+              >
                 <ThemeColorDots currentTheme={currentTheme} onThemeChange={handleThemeChange} size="lg" />
               </div>
             )}
@@ -195,7 +202,9 @@ export default function Navbar() {
         <button
           className="md:hidden p-2 rounded-lg hover:bg-surface transition-colors"
           onClick={() => setMobileOpen(!mobileOpen)}
-          aria-label="Toggle navigation menu"
+          aria-label="切换导航菜单"
+          aria-expanded={mobileOpen}
+          aria-controls="mobile-menu"
         >
           <svg
             width="24"
@@ -205,6 +214,7 @@ export default function Navbar() {
             stroke="currentColor"
             strokeWidth="2"
             strokeLinecap="round"
+            aria-hidden="true"
           >
             {mobileOpen ? (
               <>
@@ -224,7 +234,10 @@ export default function Navbar() {
 
       {/* Mobile Menu */}
       {mobileOpen && (
-        <div className="md:hidden bg-surface border-b border-border px-4 pb-4 mobile-menu-animate">
+        <div
+          id="mobile-menu"
+          className="md:hidden bg-surface border-b border-border px-4 pb-4 mobile-menu-animate"
+        >
           <ul className="flex flex-col gap-1">
             {navItems.map((item) => {
               const isActive = pathname === item.href;

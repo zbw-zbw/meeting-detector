@@ -66,7 +66,7 @@ export default function ComparePage() {
   return (
     <>
       <Navbar />
-      <main className="pt-24 pb-20">
+      <main id="main-content" className="pt-24 pb-20">
         <div className="max-w-[960px] mx-auto px-4 sm:px-6">
 
           {/* Header */}

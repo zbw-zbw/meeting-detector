@@ -4,7 +4,7 @@ import { IconDot, IconCheckCircle, IconLightbulb } from "@/components/Icon";
 
 export default function FeatureShowcaseSection() {
   return (
-    <section className="py-24 border-t border-border-light" id="features">
+    <section className="py-24 border-t border-border-light reveal" id="features">
       <style>{`
         @keyframes featureStagger {
           from { opacity: 0; transform: translateY(12px); }

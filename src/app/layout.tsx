@@ -7,18 +7,39 @@ import KeyboardShortcuts from "@/components/KeyboardShortcuts";
 import ScrollToTop from "@/components/ScrollToTop";
 
 export const metadata: Metadata = {
-  title: "会议废话检测器 - AI 会议效率分析工具",
+  title: {
+    default: "会议废话检测器 - AI 会议效率分析工具",
+    template: "%s - 会议废话检测器",
+  },
   description:
-    "AI 帮你揪出会议中的每一句废话，一键提取行动项，生成会议效率报告。让每一场会议都值得开。",
-  keywords:
-    "会议效率,废话检测,AI分析,行动项提取,会议纪要",
+    "用 AI 分析会议内容，识别有效信息、重复内容和废话，生成效率报告与行动项。让每一场会议都值得开。",
+  keywords: [
+    "会议效率",
+    "会议分析",
+    "AI会议",
+    "废话检测",
+    "会议纪要",
+    "行动项追踪",
+    "会议质量",
+  ],
   authors: [{ name: "Meeting Detector" }],
+  creator: "Meeting Detector",
   openGraph: {
     title: "会议废话检测器 - AI 会议效率分析工具",
     description:
-      "AI 帮你揪出会议中的每一句废话，一键提取行动项，生成会议效率报告。",
+      "用 AI 分析会议内容，识别废话，生成效率报告。让每一场会议都值得开。",
     type: "website",
     locale: "zh_CN",
+    siteName: "会议废话检测器",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "会议废话检测器",
+    description: "AI 驱动的会议效率分析工具",
+  },
+  robots: {
+    index: true,
+    follow: true,
   },
   icons: {
     icon: [
@@ -50,13 +71,48 @@ export default function RootLayout({
             __html: `try{var t=localStorage.getItem('theme');if(t!=='light'&&t!=='dark'){t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'}if(t==='dark'){document.documentElement.classList.add('dark')}}catch(e){}`,
           }}
         />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "WebApplication",
+              name: "会议废话检测器",
+              description:
+                "AI 驱动的会议效率分析工具，识别会议中的有效信息、重复内容和废话",
+              applicationCategory: "ProductivityApplication",
+              operatingSystem: "Web",
+              offers: {
+                "@type": "Offer",
+                price: "0",
+                priceCurrency: "CNY",
+              },
+              featureList: [
+                "AI 会议内容分析",
+                "效率评分",
+                "逐句分析",
+                "行动项识别",
+                "发言人效率排行",
+                "多会议对比",
+                "数据统计仪表盘",
+                "Markdown/CSV/JSON 导出",
+              ],
+            }),
+          }}
+        />
       </head>
       <body className="min-h-screen flex flex-col">
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[100] focus:px-4 focus:py-2 focus:bg-primary focus:text-white focus:rounded-lg focus:text-sm focus:font-medium"
+        >
+          跳转到主要内容
+        </a>
         <ThemeProvider>
           <ToastProvider>
+            <PageTransition>{children}</PageTransition>
             <KeyboardShortcuts />
             <ScrollToTop />
-            <PageTransition>{children}</PageTransition>
           </ToastProvider>
         </ThemeProvider>
       </body>

@@ -34,7 +34,7 @@ export default function ScenariosSection() {
   ];
 
   return (
-    <section className="py-20 border-t border-border-light">
+    <section className="py-20 border-t border-border-light reveal">
       <div className="max-w-[1200px] mx-auto px-4 sm:px-6 fade-up">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
           <div className="lg:col-span-4">

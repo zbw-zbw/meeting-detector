@@ -96,7 +96,7 @@ export default function HistoryPage() {
   return (
     <>
       <Navbar />
-      <main className="pt-24 pb-20">
+      <main id="main-content" className="pt-24 pb-20">
         <div className="max-w-[800px] mx-auto px-4 sm:px-6">
           {/* Title */}
           <div className="mb-8 fade-up">
@@ -286,6 +286,7 @@ export default function HistoryPage() {
                     placeholder="搜索会议标题..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
+                    aria-label="搜索会议标题"
                     className="w-full pl-9 pr-9 py-2.5 rounded-xl border border-border bg-surface text-sm text-text placeholder:text-text-muted focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                   />
                   {searchQuery && (

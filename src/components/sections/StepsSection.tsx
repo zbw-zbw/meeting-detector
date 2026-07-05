@@ -25,7 +25,7 @@ export default function StepsSection() {
   ];
 
   return (
-    <section className="py-24 border-t border-border-light">
+    <section className="py-24 border-t border-border-light reveal">
       <div className="max-w-[1200px] mx-auto px-4 sm:px-6 fade-up">
         <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-16">
           <div>

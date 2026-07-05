@@ -8,7 +8,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/components/ToastProvider";
 import { saveToHistory } from "@/lib/history";
-import { IconClipboard, IconCalendar, IconLightbulb, IconSearch, IconAlert, IconFileText, IconClose, IconCheckCircle, IconClock, IconUsers, IconBook } from "@/components/Icon";
+import { IconClipboard, IconCalendar, IconLightbulb, IconSearch, IconAlert, IconFileText, IconClose, IconCheckCircle, IconCheck, IconClock, IconUsers, IconBook } from "@/components/Icon";
 
 const EXAMPLES: Record<string, string> = {
   planning: `会议主题：Q3产品规划讨论会
@@ -98,9 +98,9 @@ const exampleLabels: { key: string; label: string; icon: React.ReactNode; colorC
 
 // 加载步骤
 const LOADING_STEPS = [
-  { label: "文本预处理", delay: 2000 },
-  { label: "内容分类分析", delay: 5000 },
-  { label: "生成分析报告", delay: Infinity },
+  { label: "AI 正在阅读会议内容...", description: "解析文本结构和发言人", delay: 2000 },
+  { label: "AI 正在分析每句话的价值...", description: "识别有效信息、重复内容和废话", delay: 5000 },
+  { label: "AI 正在生成报告...", description: "汇总评分、行动项和改进建议", delay: Infinity },
 ];
 
 export default function AnalyzePage() {
@@ -173,6 +173,31 @@ export default function AnalyzePage() {
   useEffect(() => {
     if (error) showToast(error, "error");
   }, [error, showToast]);
+
+  // Check if coming from template library (?from=template)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("from") === "template") {
+      const templateText = localStorage.getItem("templateText");
+      if (templateText) {
+        setText(templateText);
+        // Adjust textarea height after content is set
+        requestAnimationFrame(() => {
+          if (textareaRef.current) {
+            textareaRef.current.style.height = "auto";
+            const newHeight = Math.min(
+              textareaRef.current.scrollHeight,
+              window.innerHeight * 0.6
+            );
+            textareaRef.current.style.height = `${newHeight}px`;
+          }
+        });
+        // Clean up the flag and stored text
+        localStorage.removeItem("templateText");
+        window.history.replaceState({}, "", "/analyze");
+      }
+    }
+  }, []);
 
   const handleAnalyze = async () => {
     if (!canAnalyze) return;
@@ -321,7 +346,7 @@ export default function AnalyzePage() {
   return (
     <>
       <Navbar />
-      <main className="pt-24 pb-20">
+      <main id="main-content" className="pt-24 pb-20">
         <div className="max-w-[800px] mx-auto px-4 sm:px-6">
           {/* Breadcrumb */}
           <nav className="flex items-center gap-2 text-sm text-text-muted mb-6 fade-up">
@@ -362,6 +387,7 @@ export default function AnalyzePage() {
               }}
               onKeyDown={handleKeyDown}
               disabled={loading}
+              aria-label="会议内容输入框"
               placeholder={`在这里粘贴会议纪要或文字记录...\n\n支持任意格式，建议包含发言人标注以获得更准确的分析。`}
               className="w-full min-h-[300px] sm:min-h-[400px] bg-surface rounded-2xl border border-border p-5 sm:p-6 text-text text-base leading-relaxed resize-none placeholder:text-text-muted textarea-glow focus:border-primary transition-all outline-none disabled:opacity-60 disabled:cursor-not-allowed"
             />
@@ -379,98 +405,92 @@ export default function AnalyzePage() {
 
             {/* Loading Overlay */}
             {loading && (
-              <div className="absolute inset-0 bg-surface/90 backdrop-blur-sm rounded-2xl flex flex-col items-center justify-center gap-8 z-10">
-                {/* Completion checkmark animation */}
-                {completedStep === 2 && (
-                  <div className="flex flex-col items-center gap-3">
-                    <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
-                      <circle
-                        cx="32" cy="32" r="28"
-                        stroke="var(--color-effective)"
-                        strokeWidth="3"
-                        className="checkmark-circle"
-                      />
-                      <path
-                        d="M20 32l8 8 16-16"
-                        stroke="var(--color-effective)"
-                        strokeWidth="3"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        className="checkmark-check"
-                      />
-                    </svg>
-                    <p className="text-sm font-medium text-effective">分析完成</p>
-                  </div>
-                )}
-
-                {/* Step Indicator (hidden after completion) */}
-                {completedStep < 2 && (
-                  <>
-                    <div className="flex items-center gap-0 w-full max-w-xs px-6">
-                  {LOADING_STEPS.map((step, i) => {
-                    const done = completedStep >= i;
-                    const active = i === completedStep + 1 || (completedStep === -1 && i === 0);
-                    return (
-                      <div key={step.label} className="flex items-center flex-1 last:flex-none">
-                        {/* Step circle */}
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-sm font-bold transition-all duration-500 ${
-                          done
-                            ? "bg-primary text-white"
-                            : active
-                              ? "bg-primary/10 text-primary border-2 border-primary"
-                              : "bg-border-light text-text-muted"
-                        }`}>
-                          {done ? (
-                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                              <path d="M3 8l4 4 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                            </svg>
-                          ) : (
-                            <span className="text-xs">{i + 1}</span>
-                          )}
+              <div className="fixed inset-0 z-50 bg-bg/80 backdrop-blur-sm flex items-center justify-center">
+                <div className="bg-surface rounded-2xl border border-border p-8 max-w-md w-full mx-4 shadow-2xl">
+                  {/* Completion checkmark animation */}
+                  {completedStep === 2 ? (
+                    <div className="flex flex-col items-center gap-3 py-4">
+                      <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+                        <circle
+                          cx="32" cy="32" r="28"
+                          stroke="var(--color-effective)"
+                          strokeWidth="3"
+                          className="checkmark-circle"
+                        />
+                        <path
+                          d="M20 32l8 8 16-16"
+                          stroke="var(--color-effective)"
+                          strokeWidth="3"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          className="checkmark-check"
+                        />
+                      </svg>
+                      <p className="text-sm font-medium text-effective">分析完成</p>
+                    </div>
+                  ) : (
+                    <>
+                      {/* Progress bar */}
+                      <div className="mb-6">
+                        <div className="flex justify-between text-xs text-text-muted mb-2">
+                          <span>分析进度</span>
+                          <span className="number-highlight">{Math.min(95, (completedStep + 1) * 33)}%</span>
                         </div>
-                        {/* Connector line */}
-                        {i < LOADING_STEPS.length - 1 && (
-                          <div className={`flex-1 h-0.5 mx-2 rounded transition-all duration-500 ${
-                            completedStep >= i ? "bg-primary" : "bg-border-light"
-                          }`} />
-                        )}
+                        <div className="h-2 rounded-full bg-border-light overflow-hidden">
+                          <div
+                            className="h-full bg-primary rounded-full transition-all duration-500 ease-out"
+                            style={{ width: `${Math.min(95, (completedStep + 1) * 33)}%` }}
+                          />
+                        </div>
                       </div>
-                    );
-                  })}
-                </div>
 
-                {/* Step labels */}
-                <div className="flex flex-col gap-2 mt-2">
-                  {LOADING_STEPS.map((step, i) => {
-                    const done = completedStep >= i;
-                    const active = i === completedStep + 1 || (completedStep === -1 && i === 0);
-                    return (
-                      <p key={step.label} className={`text-sm transition-all duration-500 ${
-                        done
-                          ? "text-primary font-medium"
-                          : active
-                            ? "text-text-secondary"
-                            : "text-text-muted"
-                      }`}>
-                        {done && <span className="inline-block mr-1">--</span>}
-                        {step.label}
-                        {active && (
-                          <span className="inline-flex gap-1 ml-2">
-                            <span className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce" style={{ animationDelay: "0ms" }} />
-                            <span className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce" style={{ animationDelay: "150ms" }} />
-                            <span className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce" style={{ animationDelay: "300ms" }} />
-                          </span>
-                        )}
+                      {/* Steps */}
+                      <div className="space-y-4">
+                        {LOADING_STEPS.map((step, i) => {
+                          const done = completedStep > i;
+                          const active = completedStep === i || (completedStep === -1 && i === 0);
+                          const reached = completedStep >= i || (completedStep === -1 && i === 0);
+                          return (
+                            <div
+                              key={step.label}
+                              className={`flex items-center gap-3 transition-opacity duration-300 ${reached ? "opacity-100" : "opacity-40"}`}
+                            >
+                              <div
+                                className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-all duration-500 ${
+                                  done
+                                    ? "bg-effective text-white"
+                                    : active
+                                      ? "bg-primary text-white"
+                                      : "bg-border text-text-muted"
+                                }`}
+                              >
+                                {done ? (
+                                  <IconCheck size={14} />
+                                ) : (
+                                  <span className="text-xs font-bold">{i + 1}</span>
+                                )}
+                              </div>
+                              <div className="flex-1">
+                                <p
+                                  className={`text-sm font-medium transition-colors duration-300 ${
+                                    reached ? "text-text" : "text-text-muted"
+                                  }`}
+                                >
+                                  {step.label}
+                                </p>
+                                <p className="text-xs text-text-muted">{step.description}</p>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      <p className="text-xs text-text-muted mt-6 text-center">
+                        分析通常需要 10-30 秒
                       </p>
-                    );
-                  })}
+                    </>
+                  )}
                 </div>
-
-                <p className="text-xs text-text-muted mt-2">
-                  分析通常需要 10-30 秒
-                </p>
-                  </>
-                )}
               </div>
             )}
           </div>
@@ -616,26 +636,17 @@ export default function AnalyzePage() {
                 loading
                   ? "bg-primary/60 text-white cursor-wait"
                   : canAnalyze
-                    ? "bg-primary text-white cta-btn hover:bg-primary-light analyze-btn-ready"
+                    ? "bg-primary text-white cta-btn ripple-btn hover:bg-primary-light analyze-btn-ready"
                     : "bg-border text-text-muted cursor-not-allowed"
               }`}
             >
               {loading ? (
                 <>
-                  <svg
-                    className="animate-spin w-5 h-5"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                  >
-                    <circle
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="3"
-                      strokeDasharray="60 20"
-                    />
-                  </svg>
+                  <span className="flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-white animate-bounce" style={{ animationDelay: "0ms" }} />
+                    <span className="w-1.5 h-1.5 rounded-full bg-white animate-bounce" style={{ animationDelay: "150ms" }} />
+                    <span className="w-1.5 h-1.5 rounded-full bg-white animate-bounce" style={{ animationDelay: "300ms" }} />
+                  </span>
                   AI 正在分析...
                 </>
               ) : (

@@ -12,6 +12,7 @@ function base(size = 20): SVGProps<SVGSVGElement> {
     strokeWidth: 2,
     strokeLinecap: "round" as const,
     strokeLinejoin: "round" as const,
+    "aria-hidden": true,
   };
 }
 
@@ -324,7 +325,7 @@ export function IconZap({ size = 20, ...p }: IconProps) {
 /* ─── Status dots ─── */
 export function IconDot({ size = 12, ...p }: IconProps) {
   return (
-    <svg width={size} height={size} viewBox="0 0 12 12" fill="currentColor" {...p}>
+    <svg width={size} height={size} viewBox="0 0 12 12" fill="currentColor" aria-hidden="true" {...p}>
       <circle cx="6" cy="6" r="6" />
     </svg>
   );
@@ -377,7 +378,7 @@ export function IconDownload({ size = 16, ...p }: IconProps) {
 
 export function IconPlus({ size = 16, ...p }: IconProps) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}>
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" {...p}>
       <path d="M12 5v14M5 12h14" />
     </svg>
   );
@@ -426,7 +427,7 @@ export function IconSparkles({ size = 16, ...p }: IconProps) {
 
 export function IconPalette({ size = 16, ...p }: IconProps) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}>
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" {...p}>
       <circle cx="13.5" cy="6.5" r="2.5" />
       <circle cx="19" cy="11" r="2" />
       <circle cx="6" cy="12" r="2" />

@@ -5,7 +5,7 @@ import { IconArrowRight } from "@/components/Icon";
 
 export default function CTASection() {
   return (
-    <section className="bg-[var(--text)] cta-grid-bg relative">
+    <section className="bg-[var(--text)] cta-grid-bg relative reveal">
       {/* Dark mode grid overlay */}
       <div className="absolute inset-0 cta-grid-bg-dark dark:block hidden" />
       <div className="relative max-w-[1200px] mx-auto px-4 sm:px-6 py-20 md:py-24 text-center fade-up">

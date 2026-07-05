@@ -145,7 +145,7 @@ export default function ResultPage() {
     return (
       <>
         <Navbar />
-        <main className="pt-24 pb-20">
+        <main id="main-content" className="pt-24 pb-20">
           <div className="max-w-[600px] mx-auto px-4 sm:px-6 text-center">
             <div className="mb-8">
               <svg width="120" height="120" viewBox="0 0 120 120" className="mx-auto mb-4" fill="none">
@@ -195,7 +195,7 @@ export default function ResultPage() {
     <>
       <Navbar />
       {isHighScore && <Confetti active={true} />}
-      <main className="pt-24 pb-20">
+      <main id="main-content" className="pt-24 pb-20">
         <div className="max-w-[960px] mx-auto px-4 sm:px-6">
 
           {/* Region 1: Report Header */}

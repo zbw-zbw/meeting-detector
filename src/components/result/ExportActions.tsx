@@ -181,7 +181,7 @@ export default function ExportActions({ result, copied, shared, showToast }: Exp
       {/* Re-analyze (CTA, standalone) */}
       <Link
         href="/analyze"
-        className="px-6 py-2.5 bg-primary text-white rounded-full font-semibold cta-btn inline-flex items-center gap-2 shadow-sm"
+        className="px-6 py-2.5 bg-primary text-white rounded-full font-semibold cta-btn ripple-btn inline-flex items-center gap-2 shadow-sm"
       >
         <IconRefresh size={16} />
         重新分析
