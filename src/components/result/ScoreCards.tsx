@@ -27,7 +27,7 @@ export default function ScoreCards({
     <div className={`grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6 ${className ?? ""}`}>
 
       {/* Card 1 -- Efficiency Score */}
-      <div className={`relative bg-surface rounded-2xl p-6 shadow-sm border border-border overflow-hidden fade-up score-pulse score-card-hover ${
+      <div className={`relative bg-surface rounded-2xl p-6 shadow-sm border border-border overflow-hidden fade-up score-pulse interactive-card ${
         score >= 90 ? "score-pulse-excellent" : score >= 70 ? "score-pulse-good" : score >= 50 ? "score-pulse-fair" : "score-pulse-poor"
       } score-flash`}>
         <div className={`h-1 -mx-6 -mt-6 mb-4 ${getScoreBarColor(score)} score-bar-animated`} />
@@ -45,7 +45,7 @@ export default function ScoreCards({
       </div>
 
       {/* Card 2 -- Effective */}
-      <div className="bg-surface rounded-2xl p-6 shadow-sm border border-border overflow-hidden fade-up score-card-hover">
+      <div className="bg-surface rounded-2xl p-6 shadow-sm border border-border overflow-hidden fade-up interactive-card">
         <div className="h-1 -mx-6 -mt-6 mb-4 bg-effective score-bar-animated" />
         <div className="text-5xl font-extrabold text-effective number-highlight">
           {animEffective}%
@@ -54,7 +54,7 @@ export default function ScoreCards({
       </div>
 
       {/* Card 3 -- Repetitive */}
-      <div className="bg-surface rounded-2xl p-6 shadow-sm border border-border overflow-hidden fade-up score-card-hover">
+      <div className="bg-surface rounded-2xl p-6 shadow-sm border border-border overflow-hidden fade-up interactive-card">
         <div className="h-1 -mx-6 -mt-6 mb-4 bg-repetitive score-bar-animated" />
         <div className="text-5xl font-extrabold text-repetitive number-highlight">
           {animRepetitive}%
@@ -63,7 +63,7 @@ export default function ScoreCards({
       </div>
 
       {/* Card 4 -- Nonsense */}
-      <div className="bg-surface rounded-2xl p-6 shadow-sm border border-border overflow-hidden fade-up score-card-hover">
+      <div className="bg-surface rounded-2xl p-6 shadow-sm border border-border overflow-hidden fade-up interactive-card">
         <div className="h-1 -mx-6 -mt-6 mb-4 bg-nonsense score-bar-animated" />
         <div className="text-5xl font-extrabold text-nonsense number-highlight">
           {animNonsense}%

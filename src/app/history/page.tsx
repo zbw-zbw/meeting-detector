@@ -6,6 +6,7 @@ import { useFadeUp } from "@/hooks/useFadeUp";
 import { useToast } from "@/components/ToastProvider";
 import {
   getHistory,
+  toggleFavorite,
   clearHistory,
   formatHistoryDate,
   getScoreBgClass,
@@ -14,7 +15,7 @@ import {
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
-import { IconBook, IconTrash, IconInbox, IconArrowRight, IconSearch, IconX, IconTrendingUp, IconChart, IconDownload, IconClipboard, IconZap, IconAlert, IconCheck } from "@/components/Icon";
+import { IconBook, IconTrash, IconInbox, IconArrowRight, IconSearch, IconX, IconTrendingUp, IconChart, IconDownload, IconClipboard, IconZap, IconAlert, IconCheck, IconStar, IconRefresh } from "@/components/Icon";
 
 export default function HistoryPage() {
   useFadeUp();
@@ -25,7 +26,7 @@ export default function HistoryPage() {
   const [loading, setLoading] = useState(true);
   const [showConfirm, setShowConfirm] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [scoreFilter, setScoreFilter] = useState<"all" | "high" | "medium" | "low">("all");
+  const [scoreFilter, setScoreFilter] = useState<"all" | "favorite" | "high" | "medium" | "low">("all");
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
 
   useEffect(() => {
@@ -66,6 +67,8 @@ export default function HistoryPage() {
     if (searchQuery && !item.meetingTitle.toLowerCase().includes(searchQuery.toLowerCase())) {
       return false;
     }
+    // Favorite filter
+    if (scoreFilter === "favorite" && !item.favorite) return false;
     // Score filter
     if (scoreFilter === "high" && item.score < 70) return false;
     if (scoreFilter === "medium" && (item.score < 50 || item.score >= 70)) return false;
@@ -303,6 +306,7 @@ export default function HistoryPage() {
                 <div className="flex items-center gap-1.5">
                   {([
                     { key: "all", label: "全部" },
+                    { key: "favorite", label: "收藏" },
                     { key: "high", label: "高效" },
                     { key: "medium", label: "中等" },
                     { key: "low", label: "低效" },
@@ -310,7 +314,7 @@ export default function HistoryPage() {
                     <button
                       key={f.key}
                       onClick={() => setScoreFilter(f.key)}
-                      className={`px-3 py-2 rounded-lg text-xs font-medium transition-all ${
+                      className={`px-3 py-2 rounded-lg text-xs font-medium filter-btn transition-all ${
                         scoreFilter === f.key
                           ? "bg-primary text-white"
                           : "bg-surface border border-border text-text-secondary hover:bg-border-light"
@@ -387,7 +391,7 @@ export default function HistoryPage() {
                 return (
                   <div
                     key={item.id}
-                    className={`bg-surface rounded-2xl p-5 shadow-sm mb-4 fade-up transition-all duration-150 group relative overflow-hidden ${
+                    className={`bg-surface rounded-2xl p-5 shadow-sm mb-4 fade-up interactive-card transition-all duration-150 group relative overflow-hidden ${
                       highlightedIndex === idx ? "border-2 border-primary ring-2 ring-primary/20" : "border-l-[3px] border-t-0 border-r-0 border-b-0"
                     } ${isHighest ? "border-l-effective" : isLowest ? "border-l-nonsense" : "border-l-border hover:border-l-primary"}`}
                   >
@@ -434,7 +438,7 @@ export default function HistoryPage() {
                         </div>
                       </div>
 
-                      {/* Right: Mini bar chart + View button */}
+                      {/* Right: Mini bar chart + actions */}
                       <div className="shrink-0 flex flex-col items-end gap-2">
                         <div className="w-[120px] h-2 rounded-full overflow-hidden flex">
                           <div
@@ -450,7 +454,37 @@ export default function HistoryPage() {
                             style={{ width: `${nonPct}%` }}
                           />
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-wrap items-center justify-end gap-2">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleFavorite(item.id);
+                            // 重新加载历史以反映收藏状态变化
+                            setHistory(getHistory());
+                          }}
+                          className={`p-1.5 rounded-lg transition-colors ${
+                            item.favorite
+                              ? "text-amber-500 hover:text-amber-600"
+                              : "text-text-muted hover:text-amber-500"
+                          }`}
+                          aria-label={item.favorite ? "取消收藏" : "收藏"}
+                          title={item.favorite ? "取消收藏" : "收藏"}
+                        >
+                          <IconStar size={16} fill={item.favorite} />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            // HistoryItem 未存储原始文本(rawText)，
+                            // 因此使用已有的完整分析结果直接跳转到结果页重新查看
+                            localStorage.setItem("lastAnalysis", JSON.stringify(item.fullResult));
+                            router.push("/result");
+                          }}
+                          className="px-3 py-1.5 text-xs text-primary hover:bg-primary/10 rounded-lg transition-colors inline-flex items-center"
+                          title="用相同内容重新分析"
+                        >
+                          <IconRefresh size={12} className="mr-1" /> 重分析
+                        </button>
                         <button
                           onClick={() => viewReport(item)}
                           className="text-xs px-3 py-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary hover:text-white transition-all whitespace-nowrap"

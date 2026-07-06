@@ -55,7 +55,7 @@ export default function TemplatesPage() {
               <button
                 key={cat}
                 onClick={() => setCategory(cat)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                className={`px-4 py-2 rounded-lg text-sm font-medium filter-btn transition-all ${
                   category === cat
                     ? "bg-primary text-white"
                     : "bg-surface border border-border text-text-secondary hover:bg-border-light"
@@ -71,7 +71,7 @@ export default function TemplatesPage() {
             {filtered.map((template, i) => (
               <div
                 key={template.id}
-                className="bg-surface rounded-2xl border border-border p-5 fade-up card-gradient-border hover:shadow-lg transition-shadow group"
+                className="bg-surface rounded-2xl border border-border p-5 fade-up card-gradient-border interactive-card hover:shadow-lg transition-shadow group"
                 style={{ animationDelay: `${i * 0.05}s` }}
               >
                 {/* Category badge */}

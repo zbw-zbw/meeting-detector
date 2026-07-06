@@ -70,7 +70,7 @@ export default function SentenceList({ sentences, filter, setFilter, showAll, se
                 setFilter(btn.key);
                 setShowAll(false);
               }}
-              className={`px-3 py-1.5 rounded-full text-sm border transition-all cursor-pointer ${
+              className={`px-3 py-1.5 rounded-full text-sm border filter-btn transition-all cursor-pointer ${
                 isActive
                   ? getFilterActiveClass(btn.key)
                   : "border-transparent text-text-muted hover:text-text-secondary"

@@ -564,7 +564,7 @@ export default function StatsPage() {
           {/* ─── Overview Cards ─── */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8 fade-up">
             {/* Total analyses */}
-            <div className="bg-surface rounded-2xl p-5 border border-border shadow-sm card-enter" style={{ animationDelay: "0s" }}>
+            <div className="bg-surface rounded-2xl p-5 border border-border shadow-sm card-enter interactive-card" style={{ animationDelay: "0s" }}>
               <p className="text-sm text-text-secondary mb-1">总分析次数</p>
               <p className="text-3xl font-extrabold text-primary number-highlight">
                 {summary.totalAnalyses}
@@ -573,7 +573,7 @@ export default function StatsPage() {
             </div>
 
             {/* Average score */}
-            <div className="bg-surface rounded-2xl p-5 border border-border shadow-sm card-enter" style={{ animationDelay: "0.08s" }}>
+            <div className="bg-surface rounded-2xl p-5 border border-border shadow-sm card-enter interactive-card" style={{ animationDelay: "0.08s" }}>
               <p className="text-sm text-text-secondary mb-1">平均效率分</p>
               <p className="text-3xl font-extrabold text-text number-highlight">
                 {summary.avgScore}
@@ -589,7 +589,7 @@ export default function StatsPage() {
             </div>
 
             {/* Total sentences */}
-            <div className="bg-surface rounded-2xl p-5 border border-border shadow-sm card-enter" style={{ animationDelay: "0.16s" }}>
+            <div className="bg-surface rounded-2xl p-5 border border-border shadow-sm card-enter interactive-card" style={{ animationDelay: "0.16s" }}>
               <p className="text-sm text-text-secondary mb-1">总分析句数</p>
               <p className="text-3xl font-extrabold text-text number-highlight">
                 {summary.totalSentences.toLocaleString()}
@@ -598,7 +598,7 @@ export default function StatsPage() {
             </div>
 
             {/* Total action items */}
-            <div className="bg-surface rounded-2xl p-5 border border-border shadow-sm card-enter" style={{ animationDelay: "0.24s" }}>
+            <div className="bg-surface rounded-2xl p-5 border border-border shadow-sm card-enter interactive-card" style={{ animationDelay: "0.24s" }}>
               <p className="text-sm text-text-secondary mb-1">总行动项数</p>
               <p className="text-3xl font-extrabold text-effective number-highlight">
                 {summary.totalActionItems}

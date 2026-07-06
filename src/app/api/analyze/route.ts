@@ -52,6 +52,11 @@ const SYSTEM_PROMPT = `你是一个专业的会议效率分析师。你的任务
 6. 行动项必须包含具体的执行内容，尽量识别责任人和截止时间
 7. sentences 数组中，将原文按发言拆分成句子，每句不超过80字，太长的句子要拆分`;
 
+// AI 分析结果为动态内容，禁止缓存以保证每次分析结果最新
+const responseHeaders = {
+  "Cache-Control": "no-store, no-cache, must-revalidate",
+};
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -61,14 +66,14 @@ export async function POST(request: NextRequest) {
     if (!text || typeof text !== "string" || text.trim().length === 0) {
       return NextResponse.json(
         { error: "请输入会议内容", code: "EMPTY_TEXT" },
-        { status: 400 }
+        { status: 400, headers: responseHeaders }
       );
     }
 
     if (text.length > 50000) {
       return NextResponse.json(
         { error: "文本长度超过限制（最多50000字）", code: "TEXT_TOO_LONG" },
-        { status: 400 }
+        { status: 400, headers: responseHeaders }
       );
     }
 
@@ -76,7 +81,7 @@ export async function POST(request: NextRequest) {
     if (!process.env.DEEPSEEK_API_KEY) {
       return NextResponse.json(
         { error: "API 密钥未配置，请联系管理员", code: "NO_API_KEY" },
-        { status: 500 }
+        { status: 500, headers: responseHeaders }
       );
     }
 
@@ -96,7 +101,7 @@ export async function POST(request: NextRequest) {
     if (!raw) {
       return NextResponse.json(
         { error: "AI 分析服务暂时不可用", code: "EMPTY_RESPONSE" },
-        { status: 502 }
+        { status: 502, headers: responseHeaders }
       );
     }
 
@@ -107,7 +112,7 @@ export async function POST(request: NextRequest) {
     } catch {
       return NextResponse.json(
         { error: "分析结果解析失败，请重试", code: "PARSE_ERROR" },
-        { status: 500 }
+        { status: 500, headers: responseHeaders }
       );
     }
 
@@ -163,12 +168,12 @@ export async function POST(request: NextRequest) {
       wordCount: text.length,
     };
 
-    return NextResponse.json(result);
+    return NextResponse.json(result, { headers: responseHeaders });
   } catch (error) {
     console.error("Analysis API error:", error);
     return NextResponse.json(
       { error: "AI 分析服务暂时不可用，请稍后重试", code: "SERVICE_ERROR" },
-      { status: 502 }
+      { status: 502, headers: responseHeaders }
     );
   }
 }

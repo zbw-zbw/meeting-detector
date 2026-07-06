@@ -11,6 +11,7 @@ export interface HistoryItem {
   actionItemCount: number;
   wordCount: number;
   fullResult: AnalysisResult;
+  favorite?: boolean;
 }
 
 const STORAGE_KEY = "analysisHistory";
@@ -42,6 +43,16 @@ export function getHistory(): HistoryItem[] {
   }
 }
 
+/** Persist history array to localStorage */
+function saveHistory(history: HistoryItem[]): void {
+  if (!isStorageAvailable()) return;
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
+  } catch {
+    // ignore
+  }
+}
+
 /** Save a new analysis result to history */
 export function saveToHistory(result: AnalysisResult): boolean {
   if (!isStorageAvailable()) return false;
@@ -64,7 +75,7 @@ export function saveToHistory(result: AnalysisResult): boolean {
     if (history.length > MAX_ITEMS) {
       history.length = MAX_ITEMS;
     }
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
+    saveHistory(history);
     return true;
   } catch {
     return false;
@@ -80,6 +91,26 @@ export function clearHistory(): boolean {
   } catch {
     return false;
   }
+}
+
+/** Toggle the favorite flag of a history item */
+export function toggleFavorite(id: string): void {
+  if (!isStorageAvailable()) return;
+  try {
+    const history = getHistory();
+    const item = history.find((h) => h.id === id);
+    if (item) {
+      item.favorite = !item.favorite;
+      saveHistory(history);
+    }
+  } catch {
+    // ignore
+  }
+}
+
+/** Get all favorited history items */
+export function getFavorites(): HistoryItem[] {
+  return getHistory().filter((h) => h.favorite);
 }
 
 /** Normalize breakdown percentages so they sum to 100 */
