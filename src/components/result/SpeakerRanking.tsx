@@ -20,24 +20,29 @@ export default function SpeakerRanking({ speakerStats }: SpeakerRankingProps) {
 
       <div className="space-y-4">
         {speakerStats.map((sp) => (
-          <div key={sp.name} className="flex items-center gap-4">
+          <div key={sp.name} className="row-highlight flex items-center gap-4">
             {/* Name */}
             <span className="text-sm font-medium text-text w-16 shrink-0 truncate">{sp.name}</span>
 
             {/* Stacked bar */}
-            <div className="flex-1 flex h-3 rounded-full overflow-hidden bg-border-light">
-              <div
-                className="bg-effective transition-all duration-700"
-                style={{ width: `${sp.effective}%` }}
-              />
-              <div
-                className="bg-repetitive transition-all duration-700"
-                style={{ width: `${sp.repetitive}%` }}
-              />
-              <div
-                className="bg-nonsense transition-all duration-700"
-                style={{ width: `${sp.nonsense}%` }}
-              />
+            <div
+              className="tooltip flex-1"
+              data-tooltip={`有效 ${sp.effective}% · 重复 ${sp.repetitive}% · 废话 ${sp.nonsense}%`}
+            >
+              <div className="flex h-3 rounded-full overflow-hidden bg-border-light">
+                <div
+                  className="bg-effective transition-all duration-700"
+                  style={{ width: `${sp.effective}%` }}
+                />
+                <div
+                  className="bg-repetitive transition-all duration-700"
+                  style={{ width: `${sp.repetitive}%` }}
+                />
+                <div
+                  className="bg-nonsense transition-all duration-700"
+                  style={{ width: `${sp.nonsense}%` }}
+                />
+              </div>
             </div>
 
             {/* Stats */}

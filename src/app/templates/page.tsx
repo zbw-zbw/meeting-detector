@@ -114,13 +114,15 @@ export default function TemplatesPage() {
                 <div className="flex gap-2">
                   <button
                     onClick={() => applyTemplate(template)}
-                    className="flex-1 px-4 py-2 bg-primary text-white rounded-lg text-sm font-semibold hover:bg-primary-light transition-colors cta-btn"
+                    className="tooltip flex-1 px-4 py-2 bg-primary text-white rounded-lg text-sm font-semibold hover:bg-primary-light transition-colors cta-btn"
+                    data-tooltip="填充到分析页"
                   >
                     使用此模板
                   </button>
                   <button
                     onClick={() => setPreview(template)}
-                    className="px-4 py-2 bg-bg border border-border rounded-lg text-sm text-text-secondary hover:text-text hover:border-primary transition-all"
+                    className="tooltip px-4 py-2 bg-bg border border-border rounded-lg text-sm text-text-secondary hover:text-text hover:border-primary transition-all"
+                    data-tooltip="查看完整内容"
                   >
                     预览
                   </button>

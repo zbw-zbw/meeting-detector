@@ -19,7 +19,7 @@
   --surface: #ffffff;
   --text: #0f172a;
   --text-secondary: #64748b;
-  --text-muted: #94a3b8;
+  --text-muted: #7c8a9e;        /* 从 #94a3b8 调深，对 #f8fafc 背景确保 3:1 对比度 */
   --border: #e2e8f0;
   --border-light: #f1f5f9;
 }
@@ -30,10 +30,10 @@
   --bg: #0a0f1e;
   --surface: #131927;
   --text: #e2e8f0;
-  --text-secondary: #94a3b8;
-  --text-muted: #7a8ba5;
-  --border: #1e293b;
-  --border-light: #1a2540;
+  --text-secondary: #a5b4c8;      /* 从 #94a3b8 调亮，对 #0a0f1e 背景确保 4.5:1 对比度 */
+  --text-muted: #8b9bb5;          /* 从 #7a8ba5 调亮，确保 3:1 (muted text 允许 3:1) */
+  --border: #243149;              /* 从 #1e293b 调亮，确保可见性 */
+  --border-light: #1e2a42;        /* 从 #1a2540 调亮 */
   --primary: #3b82f6;
   --primary-light: #60a5fa;
   --primary-dark: #2563eb;
@@ -403,6 +403,22 @@ code, .number-highlight, .font-mono, kbd {
   }
   .ripple-btn:active::after {
     animation: none;
+  }
+  /* New effect degradation (tooltip / row-highlight / filter-item / loading) */
+  .filter-item {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+  .data-loading,
+  .table-shimmer {
+    animation: none;
+  }
+  .row-highlight,
+  .row-highlight::before,
+  .tooltip::after,
+  .tooltip::before {
+    transition: none;
   }
   * {
     transition-duration: 0.01ms !important;
@@ -1201,4 +1217,181 @@ a {
 .card-hover:hover {
   border-color: color-mix(in srgb, var(--primary) 30%, var(--border));
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+}
+
+/* ========== CSS Tooltip System ========== */
+.tooltip {
+  position: relative;
+}
+.tooltip::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%) translateY(4px);
+  padding: 6px 12px;
+  background: var(--text);
+  color: var(--bg);
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  border-radius: 6px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 150ms ease, transform 150ms ease;
+  z-index: 100;
+}
+.tooltip::before {
+  content: "";
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 4px solid transparent;
+  border-top-color: var(--text);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 150ms ease;
+}
+.tooltip:hover::after {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+.tooltip:hover::before {
+  opacity: 1;
+}
+
+/* Tooltip variants */
+.tooltip-bottom::after {
+  bottom: auto;
+  top: calc(100% + 8px);
+  transform: translateX(-50%) translateY(-4px);
+}
+.tooltip-bottom::before {
+  bottom: auto;
+  top: 100%;
+  border-top-color: transparent;
+  border-bottom-color: var(--text);
+}
+.tooltip-bottom:hover::after {
+  transform: translateX(-50%) translateY(0);
+}
+
+/* ========== Row Highlighting ========== */
+.row-highlight {
+  position: relative;
+  transition: background-color 150ms ease;
+}
+.row-highlight::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: transparent;
+  transition: background-color 150ms ease;
+}
+.row-highlight:hover {
+  background-color: color-mix(in srgb, var(--primary) 3%, transparent);
+}
+.row-highlight:hover::before {
+  background: var(--primary);
+}
+
+/* ========== Smooth Filter Animation ========== */
+.filter-item {
+  animation: filterItemEnter 250ms ease-out both;
+}
+@keyframes filterItemEnter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ========== Data Loading Enhancement ========== */
+@keyframes dataLoadPulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.8; }
+}
+.data-loading {
+  animation: dataLoadPulse 1.2s ease-in-out infinite;
+}
+
+/* Shimmer for data tables */
+@keyframes tableShimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.table-shimmer {
+  background: linear-gradient(90deg, var(--border-light) 25%, var(--border) 50%, var(--border-light) 75%);
+  background-size: 200% 100%;
+  animation: tableShimmer 1.5s ease-in-out infinite;
+}
+
+/* ========== WCAG Contrast & Accessibility Enhancements ========== */
+
+/* Dark mode focus enhancement - ensure focus ring is clearly visible
+   on dark surfaces by using the brighter primary-light color. */
+.dark *:focus-visible {
+  outline-color: var(--primary-light);
+}
+
+/* ========== Responsive Table (horizontal scroll hint) ========== */
+.table-responsive {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+.table-responsive::-webkit-scrollbar {
+  height: 4px;
+}
+.table-responsive::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 2px;
+}
+
+/* ========== Responsive Breakpoint Optimization ========== */
+
+/* 375px - Small mobile */
+@media (max-width: 375px) {
+  body {
+    font-size: 14px;
+  }
+  .max-w-\[1200px\] {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+  /* Reduce heading sizes on very small screens */
+  h1 {
+    font-size: 1.75rem;
+  }
+  h2 {
+    font-size: 1.375rem;
+  }
+}
+
+/* 768px - Tablet adjustments */
+@media (min-width: 376px) and (max-width: 768px) {
+  /* Ensure cards have proper spacing on tablets */
+  .grid-cols-2 {
+    gap: 0.75rem;
+  }
+}
+
+/* 1024px - Desktop */
+@media (min-width: 769px) and (max-width: 1024px) {
+  /* Tablet landscape adjustments */
+}
+
+/* 1440px - Large desktop */
+@media (min-width: 1440px) {
+  .max-w-\[1200px\] {
+    max-width: 1320px;
+  }
 }

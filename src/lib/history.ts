@@ -12,7 +12,22 @@ export interface HistoryItem {
   wordCount: number;
   fullResult: AnalysisResult;
   favorite?: boolean;
+  tags?: string[];
 }
+
+/** Preset tag list for meeting classification */
+export const PRESET_TAGS = [
+  "重要",
+  "紧急",
+  "周会",
+  "项目",
+  "客户",
+  "复盘",
+  "脑暴",
+  "评审",
+] as const;
+
+export type PresetTag = typeof PRESET_TAGS[number];
 
 const STORAGE_KEY = "analysisHistory";
 const MAX_ITEMS = 50;
@@ -111,6 +126,49 @@ export function toggleFavorite(id: string): void {
 /** Get all favorited history items */
 export function getFavorites(): HistoryItem[] {
   return getHistory().filter((h) => h.favorite);
+}
+
+/** Add a tag to a history item (idempotent) */
+export function addTag(id: string, tag: string): void {
+  if (typeof window === "undefined") return;
+  try {
+    const history = getHistory();
+    const item = history.find((h) => h.id === id);
+    if (item) {
+      if (!item.tags) item.tags = [];
+      if (!item.tags.includes(tag)) {
+        item.tags.push(tag);
+        saveHistory(history);
+      }
+    }
+  } catch {
+    // ignore
+  }
+}
+
+/** Remove a tag from a history item */
+export function removeTag(id: string, tag: string): void {
+  if (typeof window === "undefined") return;
+  try {
+    const history = getHistory();
+    const item = history.find((h) => h.id === id);
+    if (item && item.tags) {
+      item.tags = item.tags.filter((t) => t !== tag);
+      saveHistory(history);
+    }
+  } catch {
+    // ignore
+  }
+}
+
+/** Get all unique tags used across the history */
+export function getAllTags(): string[] {
+  const history = getHistory();
+  const tagSet = new Set<string>();
+  history.forEach((h) => {
+    if (h.tags) h.tags.forEach((t) => tagSet.add(t));
+  });
+  return Array.from(tagSet);
 }
 
 /** Normalize breakdown percentages so they sum to 100 */

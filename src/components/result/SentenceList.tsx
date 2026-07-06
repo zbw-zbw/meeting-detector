@@ -173,7 +173,7 @@ export default function SentenceList({ sentences, filter, setFilter, showAll, se
           return (
             <div
               key={i}
-              className={`sentence-card p-4 rounded-xl border-l-4 mb-3 transition-all duration-300 ${
+              className={`sentence-card row-highlight p-4 rounded-xl border-l-4 mb-3 transition-all duration-300 ${
                 getTypeBorderClass(s.type)
               } ${isNonsense ? "bg-nonsense-bg" : "bg-surface"}`}
             >
@@ -270,7 +270,7 @@ export default function SentenceList({ sentences, filter, setFilter, showAll, se
                 return (
                   <div
                     key={20 + i}
-                    className={`sentence-card p-4 rounded-xl border-l-4 mb-3 transition-all duration-300 ${borderColor} bg-surface`}
+                    className={`sentence-card row-highlight p-4 rounded-xl border-l-4 mb-3 transition-all duration-300 ${borderColor} bg-surface`}
                   >
                     <div className="flex items-start gap-3">
                       <div className="flex-1 min-w-0">

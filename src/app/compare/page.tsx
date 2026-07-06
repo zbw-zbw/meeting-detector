@@ -169,7 +169,7 @@ export default function ComparePage() {
 
               {/* Comparison table */}
               <div className="bg-surface rounded-2xl shadow-sm border border-border overflow-hidden fade-up">
-                <div className="overflow-x-auto">
+                <div className="overflow-x-auto table-responsive">
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b border-border">
@@ -209,7 +209,7 @@ export default function ComparePage() {
                         }
 
                         return (
-                        <tr key={row.key} className="border-b border-border-light">
+                        <tr key={row.key} className="row-highlight border-b border-border-light">
                           <td className="p-4 font-medium text-text">
                             {row.label}
                             {isScoreRow && items.length > 1 && (

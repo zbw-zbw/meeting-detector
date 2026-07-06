@@ -361,7 +361,7 @@ function RankedCard({
       : "border-l-4 border-l-nonsense";
 
   return (
-    <div className={`bg-surface rounded-xl p-4 border border-border ${bgClass} flex items-start gap-3`}>
+    <div className={`filter-item bg-surface rounded-xl p-4 border border-border ${bgClass} flex items-start gap-3`}>
       <span className="mt-0.5 shrink-0">{icon}</span>
       <div className="flex-1 min-w-0">
         <p className="font-semibold text-text truncate text-sm">{meeting.title}</p>
@@ -492,6 +492,20 @@ export default function StatsPage() {
       }));
 
     return { best, worst };
+  }, [history]);
+
+  const tagStats = useMemo(() => {
+    const tagCount = new Map<string, number>();
+    history.forEach((h) => {
+      if (h.tags) {
+        h.tags.forEach((t) => {
+          tagCount.set(t, (tagCount.get(t) || 0) + 1);
+        });
+      }
+    });
+    return Array.from(tagCount.entries())
+      .map(([tag, count]) => ({ tag, count }))
+      .sort((a, b) => b.count - a.count);
   }, [history]);
 
   /* ─── Empty state ─── */
@@ -689,6 +703,24 @@ export default function StatsPage() {
               </div>
             </div>
           </div>
+
+          {/* ─── Tag distribution ─── */}
+          {tagStats.length > 0 && (
+            <div className="bg-surface rounded-2xl p-5 border border-border card-enter mb-8 fade-up">
+              <h2 className="text-lg font-bold text-text mb-4 font-display">标签分布</h2>
+              <div className="space-y-2">
+                {tagStats.map(({ tag, count }) => (
+                  <div key={tag} className="flex items-center justify-between">
+                    <span className="text-sm text-text-secondary">
+                      <span className="inline-block w-2 h-2 rounded-full bg-accent mr-2" />
+                      {tag}
+                    </span>
+                    <span className="text-sm font-semibold text-text number-highlight">{count}次</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* ─── Top 3 Best / Worst ─── */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8 fade-up">

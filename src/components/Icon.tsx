@@ -509,3 +509,13 @@ export function IconStar({ size = 24, className, fill, ...p }: Omit<IconProps, "
     </svg>
   );
 }
+
+/* ─── Tag ─── */
+export function IconTag({ size = 16, ...p }: IconProps) {
+  return (
+    <svg {...base(size)} {...p}>
+      <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" />
+      <circle cx="7" cy="7" r="1.5" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}

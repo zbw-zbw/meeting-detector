@@ -10,12 +10,16 @@ import {
   clearHistory,
   formatHistoryDate,
   getScoreBgClass,
+  PRESET_TAGS,
+  addTag,
+  removeTag,
+  getAllTags,
   type HistoryItem,
 } from "@/lib/history";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
-import { IconBook, IconTrash, IconInbox, IconArrowRight, IconSearch, IconX, IconTrendingUp, IconChart, IconDownload, IconClipboard, IconZap, IconAlert, IconCheck, IconStar, IconRefresh } from "@/components/Icon";
+import { IconBook, IconTrash, IconInbox, IconArrowRight, IconSearch, IconX, IconTrendingUp, IconChart, IconDownload, IconClipboard, IconZap, IconAlert, IconCheck, IconStar, IconRefresh, IconTag } from "@/components/Icon";
 
 export default function HistoryPage() {
   useFadeUp();
@@ -28,10 +32,14 @@ export default function HistoryPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [scoreFilter, setScoreFilter] = useState<"all" | "favorite" | "high" | "medium" | "low">("all");
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
+  const [allTags, setAllTags] = useState<string[]>([]);
+  const [selectedTag, setSelectedTag] = useState("");
+  const [taggingItem, setTaggingItem] = useState<string | null>(null);
 
   useEffect(() => {
     const data = getHistory();
     setHistory(data);
+    setAllTags(getAllTags());
     setLoading(false);
   }, []);
 
@@ -73,6 +81,8 @@ export default function HistoryPage() {
     if (scoreFilter === "high" && item.score < 70) return false;
     if (scoreFilter === "medium" && (item.score < 50 || item.score >= 70)) return false;
     if (scoreFilter === "low" && item.score >= 50) return false;
+    // Tag filter
+    if (selectedTag && !(item.tags || []).includes(selectedTag)) return false;
     return true;
   });
 
@@ -356,12 +366,32 @@ export default function HistoryPage() {
                 </button>
               </div>
 
+              {/* Tag filter */}
+              {allTags.length > 0 && (
+                <div className="flex flex-wrap gap-2 mb-4">
+                  <span className="text-xs text-text-muted self-center mr-1">标签:</span>
+                  {allTags.map((tag) => (
+                    <button
+                      key={tag}
+                      onClick={() => setSelectedTag(selectedTag === tag ? "" : tag)}
+                      className={`px-2.5 py-1 rounded-md text-xs font-medium transition-all filter-btn ${
+                        selectedTag === tag
+                          ? "bg-accent text-white"
+                          : "bg-surface border border-border text-text-secondary hover:border-accent"
+                      }`}
+                    >
+                      {tag}
+                    </button>
+                  ))}
+                </div>
+              )}
+
               {/* Empty filter result */}
               {filteredHistory.length === 0 && history.length > 0 && (
                 <div className="text-center py-12 fade-up">
                   <p className="text-text-muted text-sm">没有匹配的记录</p>
                   <button
-                    onClick={() => { setSearchQuery(""); setScoreFilter("all"); }}
+                    onClick={() => { setSearchQuery(""); setScoreFilter("all"); setSelectedTag(""); }}
                     className="text-sm text-primary hover:underline mt-2"
                   >
                     清除筛选条件
@@ -391,7 +421,7 @@ export default function HistoryPage() {
                 return (
                   <div
                     key={item.id}
-                    className={`bg-surface rounded-2xl p-5 shadow-sm mb-4 fade-up interactive-card transition-all duration-150 group relative overflow-hidden ${
+                    className={`bg-surface rounded-2xl p-5 shadow-sm mb-4 fade-up interactive-card row-highlight transition-all duration-150 group relative ${
                       highlightedIndex === idx ? "border-2 border-primary ring-2 ring-primary/20" : "border-l-[3px] border-t-0 border-r-0 border-b-0"
                     } ${isHighest ? "border-l-effective" : isLowest ? "border-l-nonsense" : "border-l-border hover:border-l-primary"}`}
                   >
@@ -436,6 +466,19 @@ export default function HistoryPage() {
                           <span>·</span>
                           <span>{item.actionItemCount}个行动项</span>
                         </div>
+                        {/* Tags */}
+                        {item.tags && item.tags.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mb-2 mt-2">
+                            {item.tags.map((tag) => (
+                              <span
+                                key={tag}
+                                className="text-xs px-2 py-0.5 rounded bg-accent/10 text-accent font-medium"
+                              >
+                                {tag}
+                              </span>
+                            ))}
+                          </div>
+                        )}
                       </div>
 
                       {/* Right: Mini bar chart + actions */}
@@ -455,6 +498,52 @@ export default function HistoryPage() {
                           />
                         </div>
                         <div className="flex flex-wrap items-center justify-end gap-2">
+                        {/* Tag button */}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setTaggingItem(taggingItem === item.id ? null : item.id);
+                          }}
+                          className="p-1.5 rounded-lg text-text-muted hover:text-accent transition-colors tooltip"
+                          data-tooltip="管理标签"
+                          aria-label="管理标签"
+                          title="管理标签"
+                        >
+                          <IconTag size={16} />
+                        </button>
+                        {/* Tag management panel */}
+                        {taggingItem === item.id && (
+                          <div className="absolute right-0 top-full mt-2 bg-surface border border-border rounded-xl shadow-lg p-3 z-20 w-48">
+                            <p className="text-xs text-text-muted mb-2">选择标签</p>
+                            <div className="flex flex-wrap gap-1.5">
+                              {PRESET_TAGS.map((tag) => {
+                                const isActive = item.tags?.includes(tag);
+                                return (
+                                  <button
+                                    key={tag}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      if (isActive) {
+                                        removeTag(item.id, tag);
+                                      } else {
+                                        addTag(item.id, tag);
+                                      }
+                                      setHistory(getHistory());
+                                      setAllTags(getAllTags());
+                                    }}
+                                    className={`px-2 py-1 rounded-md text-xs font-medium transition-all ${
+                                      isActive
+                                        ? "bg-accent text-white"
+                                        : "bg-bg border border-border text-text-secondary hover:border-accent"
+                                    }`}
+                                  >
+                                    {tag}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
@@ -462,13 +551,13 @@ export default function HistoryPage() {
                             // 重新加载历史以反映收藏状态变化
                             setHistory(getHistory());
                           }}
-                          className={`p-1.5 rounded-lg transition-colors ${
+                          className={`tooltip p-1.5 rounded-lg transition-colors ${
                             item.favorite
                               ? "text-amber-500 hover:text-amber-600"
                               : "text-text-muted hover:text-amber-500"
                           }`}
                           aria-label={item.favorite ? "取消收藏" : "收藏"}
-                          title={item.favorite ? "取消收藏" : "收藏"}
+                          data-tooltip={item.favorite ? "取消收藏" : "收藏会议"}
                         >
                           <IconStar size={16} fill={item.favorite} />
                         </button>
@@ -480,14 +569,15 @@ export default function HistoryPage() {
                             localStorage.setItem("lastAnalysis", JSON.stringify(item.fullResult));
                             router.push("/result");
                           }}
-                          className="px-3 py-1.5 text-xs text-primary hover:bg-primary/10 rounded-lg transition-colors inline-flex items-center"
-                          title="用相同内容重新分析"
+                          className="tooltip px-3 py-1.5 text-xs text-primary hover:bg-primary/10 rounded-lg transition-colors inline-flex items-center"
+                          data-tooltip="用相同内容重新分析"
                         >
                           <IconRefresh size={12} className="mr-1" /> 重分析
                         </button>
                         <button
                           onClick={() => viewReport(item)}
-                          className="text-xs px-3 py-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary hover:text-white transition-all whitespace-nowrap"
+                          className="tooltip text-xs px-3 py-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary hover:text-white transition-all whitespace-nowrap"
+                          data-tooltip="查看详细分析报告"
                         >
                           查看报告 <IconArrowRight size={12} />
                         </button>
@@ -520,7 +610,8 @@ export default function HistoryPage() {
                             });
                             localStorage.setItem("compareItems", JSON.stringify(existing));
                           }}
-                          className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium text-primary border border-primary/30 hover:bg-primary/5 transition-all"
+                          className="tooltip inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium text-primary border border-primary/30 hover:bg-primary/5 transition-all"
+                          data-tooltip="加入对比列表"
                         >
                           <IconChart size={12} /> 对比
                         </Link>
