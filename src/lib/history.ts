@@ -32,6 +32,14 @@ export type PresetTag = typeof PRESET_TAGS[number];
 const STORAGE_KEY = "analysisHistory";
 const MAX_ITEMS = 50;
 
+/** Generate a unique id, falling back when crypto.randomUUID is unavailable (e.g. HTTP) */
+function genId(): string {
+  if (typeof crypto !== "undefined" && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  return `${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
+}
+
 /** Check if localStorage is available (privacy mode may block it) */
 function isStorageAvailable(): boolean {
   try {
@@ -44,6 +52,19 @@ function isStorageAvailable(): boolean {
   }
 }
 
+/** Validate the shape of a single history item parsed from storage */
+function isValidHistoryItem(item: unknown): item is HistoryItem {
+  if (typeof item !== "object" || item === null) return false;
+  const obj = item as Record<string, unknown>;
+  return (
+    typeof obj.id === "string" &&
+    typeof obj.meetingTitle === "string" &&
+    typeof obj.score === "number" &&
+    typeof obj.analyzedAt === "string" &&
+    typeof obj.fullResult === "object" && obj.fullResult !== null
+  );
+}
+
 /** Read all history items, newest first */
 export function getHistory(): HistoryItem[] {
   if (!isStorageAvailable()) return [];
@@ -52,19 +73,30 @@ export function getHistory(): HistoryItem[] {
     if (!raw) return [];
     const parsed = JSON.parse(raw);
     if (!Array.isArray(parsed)) return [];
-    return parsed as HistoryItem[];
+    return parsed.filter(isValidHistoryItem);
   } catch {
     return [];
   }
 }
 
 /** Persist history array to localStorage */
-function saveHistory(history: HistoryItem[]): void {
-  if (!isStorageAvailable()) return;
+function saveHistory(history: HistoryItem[]): boolean {
+  if (!isStorageAvailable()) return false;
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
-  } catch {
-    // ignore
+    return true;
+  } catch (e) {
+    if (e instanceof DOMException && e.name === "QuotaExceededError") {
+      // 配额满,尝试删除最旧的非收藏项后重试
+      const trimmed = history.filter((_, i) => i < MAX_ITEMS - 5);
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(trimmed));
+        return true;
+      } catch {
+        return false;
+      }
+    }
+    return false;
   }
 }
 
@@ -74,7 +106,7 @@ export function saveToHistory(result: AnalysisResult): boolean {
   try {
     const history = getHistory();
     const item: HistoryItem = {
-      id: crypto.randomUUID(),
+      id: genId(),
       analyzedAt: result.analyzedAt,
       meetingTitle: result.meetingTitle,
       score: result.score,

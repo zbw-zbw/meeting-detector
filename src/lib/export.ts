@@ -186,7 +186,7 @@ export function downloadCSV(result: AnalysisResult): void {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `${result.meetingTitle}_逐句分析.csv`;
+  a.download = `${sanitizeFilename(result.meetingTitle)}_逐句分析.csv`;
   a.click();
   URL.revokeObjectURL(url);
 }
@@ -198,7 +198,7 @@ export function downloadJSON(result: AnalysisResult): void {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `${result.meetingTitle}_分析结果.json`;
+  a.download = `${sanitizeFilename(result.meetingTitle)}_分析结果.json`;
   a.click();
   URL.revokeObjectURL(url);
 }

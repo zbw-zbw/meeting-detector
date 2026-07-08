@@ -5,7 +5,7 @@ import Navbar from "@/components/Navbar";
 import Link from "next/link";
 import { useFadeUp } from "@/hooks/useFadeUp";
 import { useCountUp } from "@/hooks/useCountUp";
-import { useState, useEffect, useCallback, Suspense } from "react";
+import { useState, useEffect, useCallback, useMemo, Suspense } from "react";
 import type { AnalysisResult, ActionItem } from "@/types/analysis";
 import { useToast } from "@/components/ToastProvider";
 import { normalizeBreakdown } from "@/lib/history";
@@ -68,10 +68,10 @@ export default function ResultPage() {
       const stored = localStorage.getItem("lastAnalysis");
       if (stored) {
         const parsed = JSON.parse(stored);
-        if (parsed.breakdown) {
+        if (parsed && parsed.breakdown && typeof parsed.score === 'number' && Array.isArray(parsed.sentences)) {
           parsed.breakdown = normalizeBreakdown(parsed.breakdown);
+          if (!settled) setResult(parsed);
         }
-        if (!settled) setResult(parsed);
       }
     } catch {
       // ignore parse errors
@@ -135,6 +135,12 @@ export default function ResultPage() {
     } : null);
   }, []);
 
+  /* speaker efficiency aggregation (memoized) */
+  const speakerStats = useMemo(() => result ? computeSpeakerStats(result) : null, [result]);
+
+  /* deep insights (memoized) */
+  const deepInsights = useMemo(() => result ? computeDeepInsights(result) : [], [result]);
+
   /* ─── loading state (skeleton) ─── */
   if (loading) {
     return <ResultSkeleton />;
@@ -184,12 +190,6 @@ export default function ResultPage() {
   const scoreColor = getScoreRawColor(score);
   const bd = result.breakdown ?? { effective: 0, repetitive: 0, nonsense: 0 };
   const isHighScore = score >= 80;
-
-  /* speaker efficiency aggregation */
-  const speakerStats = computeSpeakerStats(result);
-
-  /* deep insights */
-  const deepInsights = computeDeepInsights(result);
 
   return (
     <>
@@ -271,6 +271,7 @@ export default function ResultPage() {
               copied={copied}
               shared={shared}
               showToast={showToast}
+              onCopy={handleCopy}
             />
           </Suspense>
         </div>

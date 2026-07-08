@@ -14,9 +14,10 @@ interface ExportActionsProps {
   copied: boolean;
   shared: boolean;
   showToast: (msg: string, type: "success" | "error" | "info") => void;
+  onCopy?: () => void;
 }
 
-export default function ExportActions({ result, copied, shared, showToast }: ExportActionsProps) {
+export default function ExportActions({ result, copied, shared, showToast, onCopy }: ExportActionsProps) {
   const [showExportMenu, setShowExportMenu] = useState(false);
   const exportDropdownRef = useRef<HTMLDivElement>(null);
 
@@ -57,7 +58,11 @@ export default function ExportActions({ result, copied, shared, showToast }: Exp
       lines.push(`${i + 1}. ${s}`);
     });
     navigator.clipboard.writeText(lines.join("\n")).then(() => {
-      showToast("报告已复制到剪贴板", "success");
+      if (onCopy) {
+        onCopy();
+      } else {
+        showToast("报告已复制到剪贴板", "success");
+      }
     });
   };
 

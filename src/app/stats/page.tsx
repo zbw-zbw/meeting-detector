@@ -38,6 +38,7 @@ interface TypeDistribution {
 }
 
 interface RankedMeeting {
+  id: string;
   rank: number;
   title: string;
   score: number;
@@ -75,6 +76,8 @@ function BarChart({ buckets }: { buckets: ScoreBucket[] }) {
       viewBox={`0 0 ${chartWidth + 40} ${chartHeight + topPad + 20}`}
       className="w-full"
       style={{ maxHeight: 280 }}
+      role="img"
+      aria-label="效率分布柱状图"
     >
       {/* Y-axis guide lines */}
       {[0, 0.25, 0.5, 0.75, 1].map((ratio) => {
@@ -193,6 +196,8 @@ function TrendLine({ points }: { points: TrendPoint[] }) {
       viewBox={`0 0 ${chartWidth} ${chartHeight}`}
       className="w-full"
       style={{ maxHeight: 260 }}
+      role="img"
+      aria-label="废话率趋势图"
     >
       {/* Y-axis guide lines */}
       {[0, 25, 50, 75, 100].map((val) => {
@@ -308,7 +313,7 @@ function PieChart({ distribution }: { distribution: TypeDistribution[] }) {
 
   return (
     <div className="flex flex-col sm:flex-row items-center gap-4">
-      <svg viewBox={`0 0 ${size} ${size}`} className="w-40 h-40 shrink-0">
+      <svg viewBox={`0 0 ${size} ${size}`} className="w-40 h-40 shrink-0" role="img" aria-label="内容类型分布饼图">
         {slices.map((s, i) => {
           const x1 = cx + r * Math.cos(s.startAngle);
           const y1 = cy + r * Math.sin(s.startAngle);
@@ -471,6 +476,7 @@ export default function StatsPage() {
       .sort((a, b) => b.score - a.score);
 
     const best: RankedMeeting[] = sorted.slice(0, 3).map((h, i) => ({
+      id: h.id,
       rank: i + 1,
       title: h.meetingTitle,
       score: h.score,
@@ -483,6 +489,7 @@ export default function StatsPage() {
       .slice(-3)
       .reverse()
       .map((h, i) => ({
+        id: h.id,
         rank: i + 1,
         title: h.meetingTitle,
         score: h.score,
@@ -517,7 +524,7 @@ export default function StatsPage() {
           <div className="max-w-[600px] mx-auto px-4 sm:px-6 text-center">
             <div className="mb-8">
               <div className="mb-4">
-                <svg width="120" height="120" viewBox="0 0 120 120" className="mx-auto mb-4" fill="none">
+                <svg width="120" height="120" viewBox="0 0 120 120" className="mx-auto mb-4" fill="none" aria-hidden="true">
                   {/* Bar chart outline */}
                   <rect x="25" y="60" width="14" height="35" rx="3" stroke="var(--border)" strokeWidth="2" fill="var(--surface)" />
                   <rect x="45" y="40" width="14" height="55" rx="3" stroke="var(--border)" strokeWidth="2" fill="var(--surface)" />
@@ -687,7 +694,7 @@ export default function StatsPage() {
                 </div>
                 <div className="flex items-start gap-3">
                   <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="text-primary">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="text-primary" aria-hidden="true">
                       <path d="M2 12h12M2 8h12M2 4h12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
                     </svg>
                   </div>
@@ -734,7 +741,7 @@ export default function StatsPage() {
                 {rankedMeetings.best.length > 0 ? (
                   rankedMeetings.best.map((m) => (
                     <RankedCard
-                      key={m.analyzedAt}
+                      key={m.id || m.analyzedAt}
                       meeting={m}
                       icon={
                         <span className="w-6 h-6 rounded-full bg-effective/10 text-effective text-xs font-bold flex items-center justify-center">
@@ -760,7 +767,7 @@ export default function StatsPage() {
                 {rankedMeetings.worst.length > 0 ? (
                   rankedMeetings.worst.map((m) => (
                     <RankedCard
-                      key={m.analyzedAt}
+                      key={m.id || m.analyzedAt}
                       meeting={m}
                       icon={
                         <span className="w-6 h-6 rounded-full bg-nonsense/10 text-nonsense text-xs font-bold flex items-center justify-center">

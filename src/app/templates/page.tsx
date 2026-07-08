@@ -4,7 +4,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Link from "next/link";
 import { useFadeUp } from "@/hooks/useFadeUp";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { meetingTemplates, type MeetingTemplate } from "@/lib/templates";
 import { IconArrowRight, IconClock, IconUsers, IconArrowLeft } from "@/components/Icon";
@@ -14,6 +14,13 @@ export default function TemplatesPage() {
   const router = useRouter();
   const [category, setCategory] = useState("全部");
   const [preview, setPreview] = useState<MeetingTemplate | null>(null);
+
+  const modalRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (preview) {
+      modalRef.current?.focus();
+    }
+  }, [preview]);
 
   const categories = ["全部", ...Array.from(new Set(meetingTemplates.map((t) => t.category)))];
   const filtered =
@@ -138,10 +145,16 @@ export default function TemplatesPage() {
         <div
           className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4"
           onClick={() => setPreview(null)}
+          role="dialog"
+          aria-modal="true"
+          aria-label="模板预览"
         >
           <div
             className="bg-surface rounded-2xl border border-border max-w-2xl w-full max-h-[80vh] overflow-hidden flex flex-col animate-modal-enter"
             onClick={(e) => e.stopPropagation()}
+            tabIndex={-1}
+            ref={modalRef}
+            onKeyDown={(e) => { if (e.key === "Escape") setPreview(null); }}
           >
             <div className="p-5 border-b border-border flex items-center justify-between">
               <div>

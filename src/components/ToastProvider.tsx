@@ -4,6 +4,7 @@ import {
   createContext,
   useCallback,
   useContext,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -38,13 +39,12 @@ const toastConfig: Record<ToastType, { bg: string; icon: typeof IconCheckCircle 
   info: { bg: "bg-primary", icon: IconSearch },
 };
 
-let toastIdCounter = 0;
-
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<ToastItem[]>([]);
+  const toastIdRef = useRef(0);
 
   const showToast = useCallback((message: string, type: ToastType = "info") => {
-    const id = ++toastIdCounter;
+    const id = ++toastIdRef.current;
     setToasts((prev) => [...prev, { id, type, message }]);
 
     // Auto-remove after 3s

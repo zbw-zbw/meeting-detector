@@ -18,7 +18,7 @@ import {
 } from "@/lib/history";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { IconBook, IconTrash, IconInbox, IconArrowRight, IconSearch, IconX, IconTrendingUp, IconChart, IconDownload, IconClipboard, IconZap, IconAlert, IconCheck, IconStar, IconRefresh, IconTag } from "@/components/Icon";
 
 export default function HistoryPage() {
@@ -36,6 +36,13 @@ export default function HistoryPage() {
   const [selectedTag, setSelectedTag] = useState("");
   const [taggingItem, setTaggingItem] = useState<string | null>(null);
 
+  const confirmModalRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (showConfirm) {
+      confirmModalRef.current?.focus();
+    }
+  }, [showConfirm]);
+
   useEffect(() => {
     const data = getHistory();
     setHistory(data);
@@ -44,7 +51,11 @@ export default function HistoryPage() {
   }, []);
 
   const viewReport = (item: HistoryItem) => {
-    localStorage.setItem("lastAnalysis", JSON.stringify(item.fullResult));
+    try {
+      localStorage.setItem("lastAnalysis", JSON.stringify(item.fullResult));
+    } catch {
+      // 存储满或隐私模式，静默失败
+    }
     router.push("/result");
   };
 
@@ -63,6 +74,10 @@ export default function HistoryPage() {
     history.length > 0 ? Math.max(...history.map((item) => item.score)) : "—";
   const minScore =
     history.length > 0 ? Math.min(...history.map((item) => item.score)) : "—";
+
+  // Pre-compute numeric min/max for highlight indicators (avoid O(n²) inside map)
+  const historicalMax = history.length > 0 ? Math.max(...history.map((h) => h.score)) : 100;
+  const historicalMin = history.length > 0 ? Math.min(...history.map((h) => h.score)) : 0;
 
   // Trend: compare last item with second-to-last
   const lastScore = history.length >= 2 ? history[0].score : null;
@@ -86,6 +101,11 @@ export default function HistoryPage() {
     return true;
   });
 
+  /* reset highlighted index when search/filter/tag changes */
+  useEffect(() => {
+    setHighlightedIndex(-1);
+  }, [searchQuery, scoreFilter, selectedTag]);
+
   /* keyboard navigation */
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -96,7 +116,7 @@ export default function HistoryPage() {
       } else if (e.key === "ArrowUp") {
         e.preventDefault();
         setHighlightedIndex((prev) => Math.max(prev - 1, -1));
-      } else if (e.key === "Enter" && highlightedIndex >= 0) {
+      } else if (e.key === "Enter" && highlightedIndex >= 0 && highlightedIndex < filteredHistory.length) {
         e.preventDefault();
         viewReport(filteredHistory[highlightedIndex]);
       }
@@ -247,7 +267,7 @@ export default function HistoryPage() {
                       效率趋势（最近 {recentHistory.length} 次）
                     </h2>
                     <div className="w-full overflow-x-auto">
-                      <svg viewBox={`0 0 ${chartW} ${chartH}`} className="w-full h-auto" preserveAspectRatio="xMidYMid meet">
+                      <svg viewBox={`0 0 ${chartW} ${chartH}`} className="w-full h-auto" preserveAspectRatio="xMidYMid meet" role="img" aria-label="效率趋势图">
                         <defs>
                           <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
                             <stop offset="0%" stopColor={strokeColor} stopOpacity="0.25" />
@@ -305,6 +325,7 @@ export default function HistoryPage() {
                   {searchQuery && (
                     <button
                       onClick={() => setSearchQuery("")}
+                      aria-label="清除搜索"
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text transition-colors"
                     >
                       <IconX size={14} />
@@ -411,10 +432,7 @@ export default function HistoryPage() {
                 const nonPct =
                   total > 0 ? (item.breakdown.nonsense / total) * 100 : 0;
 
-                // Min/Max indicators
-                const allScores = history.map((h) => h.score);
-                const historicalMax = Math.max(...allScores);
-                const historicalMin = Math.min(...allScores);
+                // Min/Max indicators (pre-computed outside the loop)
                 const isHighest = item.score === historicalMax && history.length > 1;
                 const isLowest = item.score === historicalMin && history.length > 1;
 
@@ -566,7 +584,11 @@ export default function HistoryPage() {
                             e.stopPropagation();
                             // HistoryItem 未存储原始文本(rawText)，
                             // 因此使用已有的完整分析结果直接跳转到结果页重新查看
-                            localStorage.setItem("lastAnalysis", JSON.stringify(item.fullResult));
+                            try {
+                              localStorage.setItem("lastAnalysis", JSON.stringify(item.fullResult));
+                            } catch {
+                              // 存储满或隐私模式，静默失败
+                            }
                             router.push("/result");
                           }}
                           className="tooltip px-3 py-1.5 text-xs text-primary hover:bg-primary/10 rounded-lg transition-colors inline-flex items-center"
@@ -584,7 +606,13 @@ export default function HistoryPage() {
                         <Link
                           href="/compare"
                           onClick={(e) => {
-                            const existing = JSON.parse(localStorage.getItem("compareItems") || "[]");
+                            let existing: { id: string; [key: string]: unknown }[] = [];
+                            try {
+                              existing = JSON.parse(localStorage.getItem("compareItems") || "[]");
+                              if (!Array.isArray(existing)) existing = [];
+                            } catch {
+                              existing = [];
+                            }
                             if (existing.length >= 4) {
                               e.preventDefault();
                               showToast("最多对比 4 场会议", "info");
@@ -608,7 +636,11 @@ export default function HistoryPage() {
                               duration: "",
                               analyzedAt: item.analyzedAt,
                             });
-                            localStorage.setItem("compareItems", JSON.stringify(existing));
+                            try {
+                              localStorage.setItem("compareItems", JSON.stringify(existing));
+                            } catch {
+                              // 存储满或隐私模式，静默失败
+                            }
                           }}
                           className="tooltip inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium text-primary border border-primary/30 hover:bg-primary/5 transition-all"
                           data-tooltip="加入对比列表"
@@ -641,8 +673,16 @@ export default function HistoryPage() {
           onClick={(e) => {
             if (e.target === e.currentTarget) setShowConfirm(false);
           }}
+          role="dialog"
+          aria-modal="true"
+          aria-label="确认清除"
         >
-          <div className="bg-surface rounded-2xl p-6 max-w-sm w-full shadow-xl">
+          <div
+            className="bg-surface rounded-2xl p-6 max-w-sm w-full shadow-xl"
+            tabIndex={-1}
+            ref={confirmModalRef}
+            onKeyDown={(e) => { if (e.key === "Escape") setShowConfirm(false); }}
+          >
             <h3 className="text-lg font-bold text-text">确认清除</h3>
             <p className="text-sm text-text-secondary mt-2">
               将删除所有分析历史记录，此操作不可恢复

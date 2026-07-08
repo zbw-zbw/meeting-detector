@@ -7,7 +7,7 @@ import { useFadeUp } from "@/hooks/useFadeUp";
 import { useToast } from "@/components/ToastProvider";
 import type { ContentBreakdown } from "@/types/analysis";
 import {
-  IconArrowLeft, IconChart, IconTrendingUp, IconFileText,
+  IconArrowLeft, IconChart, IconTrendingUp, IconFileText, IconX,
 } from "@/components/Icon";
 
 interface CompareItem {
@@ -180,8 +180,9 @@ export default function ComparePage() {
                               onClick={() => removeItem(item.id)}
                               className="float-right text-text-muted hover:text-nonsense transition-colors print-hide"
                               title="移除"
+                              aria-label="移除该会议"
                             >
-                              <IconArrowLeft size={12} />
+                              <IconX size={12} />
                             </button>
                             {item.title.length > 8 ? item.title.slice(0, 8) + "..." : item.title}
                           </th>
@@ -208,6 +209,17 @@ export default function ComparePage() {
                             .sort((a, b) => b - a);
                         }
 
+                        // Precompute the best value for this row once (O(items) per row, not per cell)
+                        const allVals = items.map((i) => {
+                          if (row.key === "effective" || row.key === "repetitive" || row.key === "nonsense") {
+                            return i.breakdown[row.key as keyof ContentBreakdown] as number;
+                          }
+                          return i[row.key as keyof CompareItem] as number;
+                        });
+                        const best = row.key === "nonsense" || row.key === "repetitive"
+                          ? Math.min(...allVals)
+                          : Math.max(...allVals);
+
                         return (
                         <tr key={row.key} className="row-highlight border-b border-border-light">
                           <td className="p-4 font-medium text-text">
@@ -225,15 +237,6 @@ export default function ComparePage() {
                               }
                               return item[row.key as keyof CompareItem] as number;
                             })();
-                            const allVals = items.map((i) => {
-                              if (row.key === "effective" || row.key === "repetitive" || row.key === "nonsense") {
-                                return i.breakdown[row.key as keyof ContentBreakdown] as number;
-                              }
-                              return i[row.key as keyof CompareItem] as number;
-                            });
-                            const best = row.key === "nonsense" || row.key === "repetitive"
-                              ? Math.min(...allVals)
-                              : Math.max(...allVals);
                             const isBest = items.length > 1 && val === best;
 
                             // Ranking arrow for score row
@@ -245,12 +248,12 @@ export default function ComparePage() {
                                 className={`text-center p-4 ${isBest ? "font-bold text-effective" : "text-text-secondary"}`}
                               >
                                 {/* Rank arrow for score row */}
-                                {isScoreRow && items.length > 1 && rank === 1 && (
+                                {isScoreRow && items.length > 1 && rank === 1 && allVals.filter((v) => v === val).length === 1 && (
                                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--effective)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="inline mr-0.5">
                                     <polyline points="18 15 12 9 6 15" />
                                   </svg>
                                 )}
-                                {isScoreRow && items.length > 1 && rank === rankedOrder.length && (
+                                {isScoreRow && items.length > 1 && rank === rankedOrder.length && allVals.filter((v) => v === val).length === 1 && (
                                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--nonsense)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="inline mr-0.5">
                                     <polyline points="6 9 12 15 18 9" />
                                   </svg>

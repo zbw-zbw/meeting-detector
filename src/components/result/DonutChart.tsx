@@ -46,7 +46,7 @@ export default function DonutChart({ score, breakdown, mounted, scoreColor }: Do
         {/* Left -- SVG Donut Chart */}
         <div className="lg:w-1/2 flex justify-center">
           <div className="relative w-[200px] h-[200px]">
-            <svg viewBox="0 0 200 200" width="200" height="200">
+            <svg viewBox="0 0 200 200" width="200" height="200" role="img" aria-label="会议效率评分环形图">
               {/* Background circle */}
               <circle
                 cx="100"

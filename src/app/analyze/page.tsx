@@ -111,24 +111,39 @@ export default function AnalyzePage() {
   const [isDragging, setIsDragging] = useState(false);
   const [clearedFeedback, setClearedFeedback] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const textRef = useRef(text);
+  textRef.current = text;
+  const navTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
   const router = useRouter();
   const { showToast } = useToast();
 
   useFadeUp();
+
+  // 组件卸载时清理导航定时器和未完成的请求
+  useEffect(() => () => {
+    if (navTimerRef.current) clearTimeout(navTimerRef.current);
+    abortRef.current?.abort();
+  }, []);
+
+  // 自适应调整 textarea 高度
+  const adjustTextareaHeight = useCallback(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+      const newHeight = Math.min(textareaRef.current.scrollHeight, window.innerHeight * 0.6);
+      textareaRef.current.style.height = `${newHeight}px`;
+    }
+  }, []);
 
   const fillExample = useCallback((key: string) => {
     if (loading) return;
     setText(EXAMPLES[key]);
     // Adjust height after content changes
     requestAnimationFrame(() => {
-      if (textareaRef.current) {
-        textareaRef.current.style.height = "auto";
-        const newHeight = Math.min(textareaRef.current.scrollHeight, window.innerHeight * 0.6);
-        textareaRef.current.style.height = `${newHeight}px`;
-      }
+      adjustTextareaHeight();
     });
     textareaRef.current?.focus();
-  }, [loading]);
+  }, [loading, adjustTextareaHeight]);
 
   const charCount = text.length;
   const canAnalyze = text.trim().length >= 10 && !loading;
@@ -183,14 +198,7 @@ export default function AnalyzePage() {
         setText(templateText);
         // Adjust textarea height after content is set
         requestAnimationFrame(() => {
-          if (textareaRef.current) {
-            textareaRef.current.style.height = "auto";
-            const newHeight = Math.min(
-              textareaRef.current.scrollHeight,
-              window.innerHeight * 0.6
-            );
-            textareaRef.current.style.height = `${newHeight}px`;
-          }
+          adjustTextareaHeight();
         });
         // Clean up the flag and stored text
         localStorage.removeItem("templateText");
@@ -205,23 +213,31 @@ export default function AnalyzePage() {
     setLoading(true);
 
     const controller = new AbortController();
+    abortRef.current = controller;
     const timeoutId = setTimeout(() => controller.abort(), 60000);
 
     try {
       const res = await fetch("/api/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: text.trim() }),
+        body: JSON.stringify({ text: textRef.current.trim() }),
         signal: controller.signal,
       });
 
-      const data = await res.json();
-
       if (!res.ok) {
-        setError(data.error || "分析失败，请重试");
-        setLoading(false);
-        return;
+        let errorMsg = "分析失败，请稍后重试";
+        try {
+          const errorData = await res.json();
+          errorMsg = errorData.error || errorMsg;
+        } catch {
+          // res.json() 失败说明返回的不是JSON(如502 HTML错误页)
+          if (res.status >= 500) errorMsg = "服务器繁忙，请稍后重试";
+          else if (res.status === 429) errorMsg = "请求过于频繁，请稍后再试";
+        }
+        throw new Error(errorMsg);
       }
+
+      const data = await res.json();
 
       setCompletedStep(2);
 
@@ -238,12 +254,14 @@ export default function AnalyzePage() {
         showToast("隐私模式下不支持保存历史记录", "info");
       }
 
-      setTimeout(() => {
+      navTimerRef.current = setTimeout(() => {
         router.push("/result");
       }, 800);
     } catch (err) {
       if (err instanceof DOMException && err.name === "AbortError") {
         setError("分析超时，请缩短文本后重试");
+      } else if (err instanceof Error) {
+        setError(err.message);
       } else {
         setError("网络错误，请检查网络后重试");
       }
@@ -275,6 +293,10 @@ export default function AnalyzePage() {
     if (files && files.length > 0) {
       const file = files[0];
       if (file.name.endsWith(".txt") || file.type === "text/plain") {
+        if (file.size > 1024 * 1024) { // 1MB
+          showToast("文件过大，请上传 1MB 以内的文本文件", "error");
+          return;
+        }
         const reader = new FileReader();
         reader.onload = (ev) => {
           const content = ev.target?.result as string;
@@ -282,11 +304,7 @@ export default function AnalyzePage() {
             setText(content);
             // Adjust height after content changes
             requestAnimationFrame(() => {
-              if (textareaRef.current) {
-                textareaRef.current.style.height = "auto";
-                const newHeight = Math.min(textareaRef.current.scrollHeight, window.innerHeight * 0.6);
-                textareaRef.current.style.height = `${newHeight}px`;
-              }
+              adjustTextareaHeight();
             });
             showToast("文件内容已加载", "success");
           }
@@ -296,7 +314,7 @@ export default function AnalyzePage() {
         showToast("仅支持 .txt 文本文件", "error");
       }
     }
-  }, [loading, showToast]);
+  }, [loading, showToast, adjustTextareaHeight]);
 
   const handlePasteFromClipboard = useCallback(async () => {
     if (loading) return;
@@ -306,11 +324,7 @@ export default function AnalyzePage() {
         setText(clipText);
         // Adjust height
         requestAnimationFrame(() => {
-          if (textareaRef.current) {
-            textareaRef.current.style.height = "auto";
-            const newHeight = Math.min(textareaRef.current.scrollHeight, window.innerHeight * 0.6);
-            textareaRef.current.style.height = `${newHeight}px`;
-          }
+          adjustTextareaHeight();
         });
         showToast("已粘贴剪贴板内容", "success");
         textareaRef.current?.focus();
@@ -320,7 +334,7 @@ export default function AnalyzePage() {
     } catch {
       showToast("无法读取剪贴板，请手动粘贴", "error");
     }
-  }, [loading, showToast]);
+  }, [loading, showToast, adjustTextareaHeight]);
 
   const handleClear = useCallback(() => {
     if (loading) return;
@@ -334,14 +348,14 @@ export default function AnalyzePage() {
     setTimeout(() => setClearedFeedback(false), 1500);
   }, [loading]);
 
-  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
       e.preventDefault();
       if (canAnalyze) {
         handleAnalyze();
       }
     }
-  }, [canAnalyze]);
+  };
 
   return (
     <>
@@ -380,10 +394,7 @@ export default function AnalyzePage() {
               value={text}
               onChange={(e) => {
                 setText(e.target.value);
-                const textarea = e.target;
-                textarea.style.height = "auto";
-                const newHeight = Math.min(textarea.scrollHeight, window.innerHeight * 0.6);
-                textarea.style.height = `${newHeight}px`;
+                adjustTextareaHeight();
               }}
               onKeyDown={handleKeyDown}
               disabled={loading}

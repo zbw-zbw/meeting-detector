@@ -40,7 +40,7 @@ export default function MeetingSummary({
               {deepInsights.map((insight, i) => (
                 <div key={i} className="flex items-start gap-3">
                   <span className={`text-sm font-medium shrink-0 mt-0.5 ${insight.color}`}>
-                    {insight.icon === "talk" ? "Dialogue" : insight.icon === "zap" ? "Efficient" : insight.icon === "alert" ? "Alert" : ""}
+                    {insight.icon === "talk" ? "对话" : insight.icon === "zap" ? "高效" : insight.icon === "alert" ? "警示" : ""}
                   </span>
                   <div>
                     <p className="text-sm font-medium text-text">{insight.label}</p>

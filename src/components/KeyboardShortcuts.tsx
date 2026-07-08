@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { IconX } from "@/components/Icon";
 
@@ -43,6 +43,7 @@ function Kbd({ children }: { children: React.ReactNode }) {
 export default function KeyboardShortcuts() {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
+  const modalRef = useRef<HTMLDivElement>(null);
 
   const toggle = useCallback(() => {
     setOpen((prev) => !prev);
@@ -76,6 +77,13 @@ export default function KeyboardShortcuts() {
     setOpen(false);
   }, [pathname]);
 
+  // Focus the modal container when opened (focus trap entry point)
+  useEffect(() => {
+    if (open) {
+      modalRef.current?.focus();
+    }
+  }, [open]);
+
   if (!open) return null;
 
   return (
@@ -89,12 +97,11 @@ export default function KeyboardShortcuts() {
       <div
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
         onClick={close}
-        onKeyDown={close}
         role="presentation"
       />
 
       {/* Modal */}
-      <div className="relative bg-surface border border-border rounded-2xl shadow-xl w-full max-w-md p-6 animate-modal-enter">
+      <div className="relative bg-surface border border-border rounded-2xl shadow-xl w-full max-w-md p-6 animate-modal-enter" tabIndex={-1} ref={modalRef}>
         {/* Header */}
         <div className="flex items-center justify-between mb-5">
           <h2 className="text-lg font-bold text-text">键盘快捷键</h2>

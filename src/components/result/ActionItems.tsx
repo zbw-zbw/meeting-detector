@@ -7,6 +7,14 @@ import {
   IconCheckCircle, IconAlert, IconUser, IconCalendar, IconPlus,
 } from "@/components/Icon";
 
+/** Generate a unique id, falling back when crypto.randomUUID is unavailable (e.g. HTTP) */
+function genId(): string {
+  if (typeof crypto !== "undefined" && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  return `${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
+}
+
 interface ActionItemsProps {
   actionItems: ActionItem[];
   checkedItems: Set<string>;
@@ -141,6 +149,7 @@ export default function ActionItems({
               <input
                 type="text"
                 placeholder="行动项内容"
+                maxLength={200}
                 value={newActionContent}
                 onChange={(e) => setNewActionContent(e.target.value)}
                 className="w-full px-3 py-2 rounded-lg border border-border bg-surface text-sm text-text placeholder:text-text-muted focus:border-primary outline-none"
@@ -149,6 +158,7 @@ export default function ActionItems({
                 <input
                   type="text"
                   placeholder="责任人"
+                  maxLength={50}
                   value={newActionAssignee}
                   onChange={(e) => setNewActionAssignee(e.target.value)}
                   className="flex-1 px-3 py-2 rounded-lg border border-border bg-surface text-sm text-text placeholder:text-text-muted focus:border-primary outline-none"
@@ -156,6 +166,7 @@ export default function ActionItems({
                 <input
                   type="text"
                   placeholder="截止时间"
+                  maxLength={50}
                   value={newActionDeadline}
                   onChange={(e) => setNewActionDeadline(e.target.value)}
                   className="flex-1 px-3 py-2 rounded-lg border border-border bg-surface text-sm text-text placeholder:text-text-muted focus:border-primary outline-none"
@@ -172,7 +183,7 @@ export default function ActionItems({
                   onClick={() => {
                     if (!newActionContent.trim()) return;
                     const newAction: ActionItem = {
-                      id: crypto.randomUUID(),
+                      id: genId(),
                       content: newActionContent.trim(),
                       assignee: newActionAssignee.trim() || "未指定",
                       deadline: newActionDeadline.trim() || "未指定",

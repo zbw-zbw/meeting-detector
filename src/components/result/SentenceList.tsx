@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import type { SentenceAnalysis } from "@/types/analysis";
 import {
   filterButtons, getFilterActiveClass, getTypeBorderClass, getTypeBadgeClass,
@@ -20,17 +20,13 @@ interface SentenceListProps {
 
 /** Highlight matching text within a string */
 function highlightText(text: string, query: string): React.ReactNode {
-  if (!query.trim()) return text;
-  const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const regex = new RegExp(`(${escaped})`, "gi");
-  const parts = text.split(regex);
-  return parts.map((part, i) =>
-    regex.test(part) ? (
-      <mark key={i} className="bg-primary/20 text-text rounded px-0.5">{part}</mark>
-    ) : (
-      part
-    ),
-  );
+  if (!query.trim()) return [text];
+  const escaped = query.trim();
+  const parts = text.split(new RegExp(`(${escaped.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`, "gi"));
+  return parts.map((part) => {
+    const isMatch = part.toLowerCase() === escaped.toLowerCase();
+    return isMatch ? <mark key={part} className="bg-accent/20 text-text rounded px-0.5">{part}</mark> : part;
+  });
 }
 
 export default function SentenceList({ sentences, filter, setFilter, showAll, setShowAll }: SentenceListProps) {
@@ -38,18 +34,25 @@ export default function SentenceList({ sentences, filter, setFilter, showAll, se
 
   if (sentences.length === 0) return null;
 
-  const filteredSentences = sentences.filter(
-    (s) => (filter === "all" || s.type === filter) &&
-      (searchQuery.trim() === "" || s.text.toLowerCase().includes(searchQuery.trim().toLowerCase())),
-  );
+  const filteredSentences = useMemo(() => {
+    let result = sentences;
+    if (filter !== "all") result = result.filter(s => s.type === filter);
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter(s => s.text.toLowerCase().includes(q));
+    }
+    return result;
+  }, [sentences, filter, searchQuery]);
 
   const displayedSentences = filteredSentences.slice(0, 20);
   const remainingCount = filteredSentences.length - 20;
 
   // Mini donut data for stats bar
-  const effectiveCount = sentences.filter(s => s.type === "effective").length;
-  const repetitiveCount = sentences.filter(s => s.type === "repetitive").length;
-  const nonsenseCount = sentences.filter(s => s.type === "nonsense").length;
+  const { effectiveCount, repetitiveCount, nonsenseCount } = useMemo(() => ({
+    effectiveCount: sentences.filter(s => s.type === "effective").length,
+    repetitiveCount: sentences.filter(s => s.type === "repetitive").length,
+    nonsenseCount: sentences.filter(s => s.type === "nonsense").length,
+  }), [sentences]);
   const total = sentences.length;
 
   return (
@@ -172,7 +175,7 @@ export default function SentenceList({ sentences, filter, setFilter, showAll, se
 
           return (
             <div
-              key={i}
+              key={`${i}-${s.text.slice(0, 20)}`}
               className={`sentence-card row-highlight p-4 rounded-xl border-l-4 mb-3 transition-all duration-300 ${
                 getTypeBorderClass(s.type)
               } ${isNonsense ? "bg-nonsense-bg" : "bg-surface"}`}
@@ -269,7 +272,7 @@ export default function SentenceList({ sentences, filter, setFilter, showAll, se
                     : "废话";
                 return (
                   <div
-                    key={20 + i}
+                    key={`${20 + i}-${s.text.slice(0, 20)}`}
                     className={`sentence-card row-highlight p-4 rounded-xl border-l-4 mb-3 transition-all duration-300 ${borderColor} bg-surface`}
                   >
                     <div className="flex items-start gap-3">
@@ -292,7 +295,7 @@ export default function SentenceList({ sentences, filter, setFilter, showAll, se
                           style={{ width: effectiveFillWidth }}
                         />
                       </div>
-                      <span className="text-xs text-text-muted shrink-0">{s.confidence}%</span>
+                      <span className="text-xs text-text-muted shrink-0">{Math.round(s.confidence * 100)}%</span>
                       <span className="text-xs text-text-muted hidden sm:inline">{s.reason}</span>
                     </div>
                   </div>

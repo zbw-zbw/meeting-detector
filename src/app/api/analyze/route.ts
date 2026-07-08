@@ -70,6 +70,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (text.trim().length < 10) {
+      return NextResponse.json(
+        { error: "文本过短，请至少输入 10 个字符", code: "TEXT_TOO_SHORT" },
+        { status: 400, headers: responseHeaders }
+      );
+    }
+
     if (text.length > 50000) {
       return NextResponse.json(
         { error: "文本长度超过限制（最多50000字）", code: "TEXT_TOO_LONG" },
@@ -120,8 +127,8 @@ export async function POST(request: NextRequest) {
     const result: AnalysisResult = {
       meetingTitle: String(parsed.meetingTitle || "未知会议"),
       duration: String(parsed.duration || "未知"),
-      participantCount: Number(parsed.participantCount) || 0,
-      score: Number(parsed.score) || 0,
+      participantCount: Math.max(0, Math.floor(Number(parsed.participantCount) || 0)),
+      score: Math.min(100, Math.max(0, Number(parsed.score) || 0)),
       level: (["excellent", "good", "fair", "poor"].includes(
         String(parsed.level)
       )
@@ -129,9 +136,9 @@ export async function POST(request: NextRequest) {
         : "fair") as AnalysisResult["level"],
       levelLabel: String(parsed.levelLabel || "一般"),
       breakdown: {
-        effective: Number((parsed.breakdown as Record<string, unknown>)?.effective) || 0,
-        repetitive: Number((parsed.breakdown as Record<string, unknown>)?.repetitive) || 0,
-        nonsense: Number((parsed.breakdown as Record<string, unknown>)?.nonsense) || 0,
+        effective: Math.min(100, Math.max(0, Number((parsed.breakdown as Record<string, unknown>)?.effective) || 0)),
+        repetitive: Math.min(100, Math.max(0, Number((parsed.breakdown as Record<string, unknown>)?.repetitive) || 0)),
+        nonsense: Math.min(100, Math.max(0, Number((parsed.breakdown as Record<string, unknown>)?.nonsense) || 0)),
       },
       sentences: Array.isArray(parsed.sentences)
         ? (parsed.sentences as Record<string, unknown>[]).map((s) => ({

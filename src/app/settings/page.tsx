@@ -193,7 +193,7 @@ export default function SettingsPage() {
 
                 {/* Description */}
                 <p className="text-xs text-text-muted leading-relaxed">
-                  使用自己的 API Key 可以避免服务端限流。Key 仅存储在浏览器本地，不会上传到任何服务器。
+                  使用自己的 API Key 可以避免服务端限流。Key 仅存储在浏览器本地。测试连接时将临时发送到服务端进行验证，分析过程使用服务端配置的 Key。
                 </p>
 
                 {/* Actions row */}
